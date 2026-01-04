@@ -72,7 +72,11 @@
     }
     .small{font-size:12px;color:var(--muted);line-height:1.35}
 
-    .right{position:relative;background:#000}
+    .right{
+      position:relative;
+      background:#000;
+      overflow:hidden;
+    }
     iframe{width:100%;height:100%;border:0;display:block;background:#000}
 
     .topbar{
@@ -82,12 +86,40 @@
     }
     .topbar .pill{pointer-events:auto}
 
+    /* ===== Logo Equistasi (DENTRO il viewer, così non viene coperto dal WebGL) ===== */
+    .equistasi-logo{
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      z-index: 20;
+      background: rgba(0,0,0,0.6);
+      border: 1px solid rgba(255,255,255,0.18);
+      border-radius: 12px;
+      padding: 6px 10px;
+      backdrop-filter: blur(6px);
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      pointer-events: auto;
+    }
+    .equistasi-logo:hover{ background: rgba(0,0,0,0.75); }
+    .equistasi-logo:focus{ outline:2px solid rgba(77,163,255,.55); outline-offset:2px; }
+
+    .equistasi-logo img{
+      height: 26px;
+      width: auto;
+      display: block;
+      /* monocromatico bianco */
+      filter: grayscale(1) brightness(8) contrast(1.1);
+      opacity: 0.95;
+    }
+
     .sessions{
       max-height:240px; overflow:auto;
       border:1px solid var(--border); border-radius:14px;
     }
     .sessionItem{
-      padding:10px 12px; cursor:pointer;
+      padding:10px 12px;
       border-bottom:1px solid var(--border);
       display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
     }
@@ -101,35 +133,6 @@
     }
     .hr{height:1px;background:var(--border);margin:10px 0}
     .printOnly{display:none}
-
-    /* ===== Logo Equistasi (alto a destra, cliccabile, monocromatico bianco) ===== */
-    .equistasi-logo{
-      position: fixed;
-      top: 12px;
-      right: 12px;
-      z-index: 10000;
-      background: rgba(0,0,0,0.55);
-      border: 1px solid rgba(255,255,255,0.15);
-      border-radius: 12px;
-      padding: 6px 10px;
-      backdrop-filter: blur(6px);
-      pointer-events: auto;
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-    }
-    .equistasi-logo:focus{outline:2px solid rgba(77,163,255,.55); outline-offset:2px;}
-    .equistasi-logo:hover{background: rgba(0,0,0,0.68);}
-
-    .equistasi-logo img{
-      height: 26px; /* cambia a 24 o 32 se lo vuoi più piccolo/grande */
-      width: auto;
-      display: block;
-
-      /* Monocromatico bianco su sfondo scuro */
-      filter: grayscale(1) brightness(10) contrast(1.1);
-      opacity: 0.95;
-    }
 
     @media print{
       body{background:#fff;color:#000}
@@ -145,11 +148,6 @@
 </head>
 
 <body>
-  <!-- Logo Equistasi cliccabile -->
-  <a class="equistasi-logo" href="https://equistasi.com/contacts" target="_blank" rel="noopener noreferrer" aria-label="Contatti Equistasi">
-    <img src="equistasi-logo.png" alt="Equistasi" />
-  </a>
-
   <div class="app">
     <!-- PANNELLO CLINICO -->
     <aside class="left">
@@ -337,6 +335,15 @@
 
     <!-- VIEWER 3D -->
     <main class="right">
+      <!-- Logo Equistasi (cliccabile) -->
+      <a class="equistasi-logo"
+         href="https://equistasi.com/contacts"
+         target="_blank"
+         rel="noopener noreferrer"
+         aria-label="Contatti Equistasi">
+        <img src="./equistasi-logo.png" alt="Equistasi" />
+      </a>
+
       <div class="topbar">
         <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital</div>
         <div class="pill">Ruota: trascina • Zoom: rotella • Strumenti: toolbar</div>
@@ -372,8 +379,7 @@
       });
 
       if(!$("date").value){
-        const d = new Date();
-        $("date").value = d.toISOString().slice(0,10);
+        $("date").value = new Date().toISOString().slice(0,10);
       }
     }
 
@@ -571,5 +577,6 @@
   </script>
 </body>
 </html>
+
 
 
