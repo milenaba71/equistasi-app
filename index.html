@@ -3,16 +3,170 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Equistasi App</title>
+  <title>Equistasi App – Modello 3D</title>
   <style>
-    html, body { margin:0; height:100%; background:#000; }
-    iframe { width:100%; height:100%; border:0; display:block; }
+    :root{
+      --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
+      --txt:#e7eef8; --muted:#a8b3c3; --border:rgba(255,255,255,.08);
+      --accent:#4da3ff;
+    }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
+    .app{display:grid;grid-template-columns:360px 1fr;height:100vh}
+    .left{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border-right:1px solid var(--border);
+      padding:18px 16px;
+      overflow:auto;
+    }
+    h1{font-size:18px;margin:0 0 10px}
+    p{color:var(--muted);line-height:1.4;margin:0 0 12px}
+    .card{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:12px;
+      margin:12px 0;
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap}
+    .btn{
+      border:1px solid rgba(77,163,255,.35);
+      background:rgba(77,163,255,.14);
+      color:var(--txt);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:13px;
+    }
+    .btn:hover{background:rgba(77,163,255,.20)}
+    .btn.secondary{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+    }
+    .btn.secondary:hover{background:rgba(255,255,255,.10)}
+    .small{font-size:12px;color:var(--muted);line-height:1.35}
+    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
+    input, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--txt);
+      outline:none;
+    }
+    textarea{min-height:110px;resize:vertical}
+    .right{position:relative;background:#000}
+    iframe{width:100%;height:100%;border:0;display:block;background:#000}
+    .topbar{
+      position:absolute;left:12px;top:12px;right:12px;
+      display:flex;gap:10px;align-items:center;z-index:10;
+      pointer-events:none;
+    }
+    .pill{
+      pointer-events:auto;
+      padding:8px 10px;border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.35);
+      color:var(--muted);
+      font-size:12px;
+      backdrop-filter: blur(6px);
+    }
+    .pill strong{color:var(--txt);font-weight:700}
   </style>
 </head>
+
 <body>
-  <iframe
-    src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
-    allow="fullscreen">
-  </iframe>
+  <div class="app">
+    <!-- PANNELLO SINISTRO -->
+    <aside class="left">
+      <h1>Equistasi – Modello 3D muscolo-scheletrico</h1>
+      <p>
+        Viewer 3D integrato via BioDigital. Puoi ruotare/zoomare e usare gli strumenti del viewer.
+      </p>
+
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="btnCopy">Copia URL viewer</button>
+          <button class="btn secondary" id="btnClear">Reset note</button>
+        </div>
+        <div style="height:8px"></div>
+        <div class="small">
+          Salvataggio automatico nel browser (localStorage). Non serve login.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="label">Protocollo</div>
+        <input id="protocollo" placeholder="Es. Cervicale / spalla / lombare..." />
+
+        <div class="label">Muscoli target</div>
+        <input id="muscoli" placeholder="Es. trapezio sup, SCM, suboccipitali..." />
+
+        <div class="label">Note operative</div>
+        <textarea id="note" placeholder="Annotazioni..."></textarea>
+
+        <div class="small" style="margin-top:10px">
+          Suggerimento: usa il viewer per orientarti sul distretto e compila qui il protocollo.
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="small">
+          <strong>Tip GitHub Pages:</strong> il file deve chiamarsi <code>index.html</code> nella root del repository.
+        </div>
+      </div>
+    </aside>
+
+    <!-- VIEWER A DESTRA -->
+    <main class="right">
+      <div class="topbar">
+        <div class="pill"><strong>3D</strong> BioDigital embed</div>
+        <div class="pill">Ruota: trascina • Zoom: rotella • Strumenti: toolbar nel viewer</div>
+      </div>
+
+      <iframe
+        title="BioDigital – Sistema muscolo-scheletrico completo"
+        src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
+        allow="fullscreen"
+        referrerpolicy="no-referrer"
+      ></iframe>
+    </main>
+  </div>
+
+  <script>
+    // URL viewer
+    const BIODIGITAL_URL =
+      "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
+
+    // Salvataggio locale note/protocolli
+    const keys = ["protocollo","muscoli","note"];
+    keys.forEach((k)=>{
+      const el = document.getElementById(k);
+      el.value = localStorage.getItem("equistasi_"+k) || "";
+      el.addEventListener("input", ()=> localStorage.setItem("equistasi_"+k, el.value));
+    });
+
+    // Copia URL
+    document.getElementById("btnCopy").addEventListener("click", async ()=>{
+      try{
+        await navigator.clipboard.writeText(BIODIGITAL_URL);
+        alert("URL copiato!");
+      }catch(e){
+        prompt("Copia manualmente questo URL:", BIODIGITAL_URL);
+      }
+    });
+
+    // Reset note
+    document.getElementById("btnClear").addEventListener("click", ()=>{
+      if(!confirm("Vuoi cancellare le note salvate in questo browser?")) return;
+      keys.forEach(k=>{
+        localStorage.removeItem("equistasi_"+k);
+        document.getElementById(k).value = "";
+      });
+      alert("Note azzerate.");
+    });
+  </script>
 </body>
 </html>
+
