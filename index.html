@@ -2,27 +2,574 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Equistasi 3D</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Equistasi – Clinica (Demo)</title>
+
   <style>
-    html, body { margin:0; padding:0; width:100%; height:100%; background:#000; }
-    .bar {
-      position:fixed; top:10px; left:10px; z-index:9999;
-      padding:8px 10px; border-radius:12px;
-      color:#fff; background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.15);
-      font: 12px system-ui, -apple-system, Segoe UI, Roboto, Arial;
+    :root{
+      --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
+      --txt:#e7eef8; --muted:#a8b3c3; --border:rgba(255,255,255,.08);
+      --accent:#4da3ff; --ok:#3ddc97; --danger:#ff5d5d;
     }
-    iframe { position:fixed; inset:0; width:100vw; height:100vh; border:0; background:#000; }
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
+    .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
+
+    .left{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border-right:1px solid var(--border);
+      padding:16px;
+      overflow:auto;
+    }
+    h1{font-size:18px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:12px;line-height:1.35;margin-bottom:12px}
+    .card{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:12px;
+      margin:12px 0;
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
+
+    input, select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--txt);
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
+
+    .btn{
+      border:1px solid rgba(77,163,255,.35);
+      background:rgba(77,163,255,.14);
+      color:var(--txt);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:13px;
+      user-select:none;
+    }
+    .btn:hover{background:rgba(77,163,255,.20)}
+    .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
+    .btn.secondary:hover{background:rgba(255,255,255,.10)}
+    .btn.danger{border:1px solid rgba(255,93,93,.35);background:rgba(255,93,93,.12)}
+    .btn.danger:hover{background:rgba(255,93,93,.18)}
+
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.25);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .small{font-size:12px;color:var(--muted);line-height:1.35}
+
+    .right{position:relative;background:#000}
+    iframe{width:100%;height:100%;border:0;display:block;background:#000}
+
+    .topbar{
+      position:absolute;left:12px;top:12px;right:12px;
+      display:flex;gap:10px;align-items:center;z-index:10;
+      pointer-events:none;
+    }
+    .topbar .pill{pointer-events:auto}
+
+    .sessions{
+      max-height:240px; overflow:auto;
+      border:1px solid var(--border); border-radius:14px;
+    }
+    .sessionItem{
+      padding:10px 12px; cursor:pointer;
+      border-bottom:1px solid var(--border);
+      display:flex; gap:10px; align-items:flex-start; justify-content:space-between;
+    }
+    .sessionItem:last-child{border-bottom:none}
+    .sessionItem:hover{background:rgba(255,255,255,.04)}
+    .sessionItem b{color:var(--txt)}
+    .badge{
+      font-size:11px; padding:4px 8px; border-radius:999px;
+      border:1px solid var(--border); color:var(--muted);
+      white-space:nowrap;
+    }
+    .hr{height:1px;background:var(--border);margin:10px 0}
+    .printOnly{display:none}
+
+    /* ===== Logo Equistasi (alto a destra, cliccabile, monocromatico bianco) ===== */
+    .equistasi-logo{
+      position: fixed;
+      top: 12px;
+      right: 12px;
+      z-index: 10000;
+      background: rgba(0,0,0,0.55);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 12px;
+      padding: 6px 10px;
+      backdrop-filter: blur(6px);
+      pointer-events: auto;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+    }
+    .equistasi-logo:focus{outline:2px solid rgba(77,163,255,.55); outline-offset:2px;}
+    .equistasi-logo:hover{background: rgba(0,0,0,0.68);}
+
+    .equistasi-logo img{
+      height: 26px; /* cambia a 24 o 32 se lo vuoi più piccolo/grande */
+      width: auto;
+      display: block;
+
+      /* Monocromatico bianco su sfondo scuro */
+      filter: grayscale(1) brightness(10) contrast(1.1);
+      opacity: 0.95;
+    }
+
+    @media print{
+      body{background:#fff;color:#000}
+      .app{display:block}
+      .right{display:none}
+      .left{border:none;background:#fff}
+      .card{border:1px solid #ddd;background:#fff}
+      .btn, .sessions, .topbar, .equistasi-logo{display:none !important}
+      .printOnly{display:block}
+      input,select,textarea{border:1px solid #ddd;color:#000;background:#fff}
+    }
   </style>
 </head>
-<body>
-  <div class="bar">Se vedi questa scritta, index.html è servito ✅</div>
 
-  <iframe
-    src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
-    allow="fullscreen"
-  ></iframe>
+<body>
+  <!-- Logo Equistasi cliccabile -->
+  <a class="equistasi-logo" href="https://equistasi.com/contacts" target="_blank" rel="noopener noreferrer" aria-label="Contatti Equistasi">
+    <img src="equistasi-logo.png" alt="Equistasi" />
+  </a>
+
+  <div class="app">
+    <!-- PANNELLO CLINICO -->
+    <aside class="left">
+      <h1>Equistasi – Scheda clinica</h1>
+      <div class="sub">
+        Distretto → target muscoli → repere → posizionamento Equistasi → note manuali (trigger point / repere) → obiettivo.
+      </div>
+
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="pill">Salvataggio <b style="color:var(--ok)">automatico</b></div>
+          <div class="pill">Backup: Export/Import JSON</div>
+        </div>
+      </div>
+
+      <!-- DATI PAZIENTE -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between;align-items:flex-end">
+          <div style="flex:1">
+            <div class="label">Paziente (ID o Nome)</div>
+            <input id="patient" placeholder="Es. Rossi Mario / ID 001" />
+          </div>
+          <div style="width:140px">
+            <div class="label">Data</div>
+            <input id="date" type="date" />
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="label">Distretto / Protocollo</div>
+            <select id="protocol">
+              <option value="cervicale">Cervicale / cefalea tensiva</option>
+              <option value="spalla">Spalla (dolore / controllo scapolare)</option>
+              <option value="dorsale">Dorsale / scapolo-toracico</option>
+              <option value="lombare">Lombare (stabilità / dolore)</option>
+              <option value="anca">Anca (controllo / catena post.)</option>
+              <option value="ginocchio">Ginocchio (carico / catena estensoria)</option>
+              <option value="caviglia">Caviglia / piede (propriocezione)</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Lato</div>
+            <select id="side">
+              <option value="bilaterale">Bilaterale</option>
+              <option value="destro">Destro</option>
+              <option value="sinistro">Sinistro</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="label">Obiettivo clinico</div>
+            <select id="goal">
+              <option value="stabilita">Stabilità / controllo posturale</option>
+              <option value="dolore">Riduzione dolore / modulazione tono</option>
+              <option value="controllo">Controllo motorio fine / coordinazione</option>
+              <option value="carico">Ritorno al carico / simmetria</option>
+              <option value="equilibrio">Equilibrio / reattività</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Esito (oggi)</div>
+            <select id="outcome">
+              <option value="migliora">Migliora</option>
+              <option value="stabile">Stabile</option>
+              <option value="peggiora">Peggiora</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- TARGET ANATOMICI -->
+      <div class="card">
+        <div class="label">Muscoli target (principali)</div>
+        <input id="muscles" placeholder="Es. trapezio sup., SCM, suboccipitali, elevatore scapola..." />
+
+        <div class="grid2">
+          <div>
+            <div class="label">Innervazione (radici/nervo)</div>
+            <input id="innervation" placeholder="Es. C2–C4 / accessorio / C5–C6..." />
+          </div>
+          <div>
+            <div class="label">Origine / Inserzione (sintesi)</div>
+            <input id="oi" placeholder="Es. nuca → clavicola; scapola → omero..." />
+          </div>
+        </div>
+
+        <div class="grid2">
+          <div>
+            <div class="label">Trigger point (mappa rapida)</div>
+            <textarea id="triggers" placeholder="Es. TP trapezio sup (angolo collo-spalla), TP SCM, TP infraspinato..."></textarea>
+          </div>
+          <div>
+            <div class="label">Repere / punti (note cliniche)</div>
+            <textarea id="acupoints" placeholder="Es. repere su C7, bordo mediale scapola, cresta iliaca..."></textarea>
+          </div>
+        </div>
+
+        <div class="label">Note manuali (manuale + Equistasi)</div>
+        <textarea id="manual" placeholder="Es. rilascio mirato su trigger point, normalizzazione catena miofasciale, centratura e controllo..."></textarea>
+      </div>
+
+      <!-- POSIZIONAMENTO EQUISTASI -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:700">Posizionamento Equistasi</div>
+          <div class="pill">Repere → precisione</div>
+        </div>
+
+        <div class="grid3">
+          <div>
+            <div class="label">N° dispositivi</div>
+            <select id="nDevices">
+              <option>2</option><option>3</option><option selected>4</option><option>5</option><option>6</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Schema</div>
+            <select id="scheme">
+              <option value="stabilizzante">Stabilizzante</option>
+              <option value="riequilibrio">Riequilibrio</option>
+              <option value="propriocettivo">Propriocettivo</option>
+              <option value="antalgico">Antalgico / tono</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Durata (min)</div>
+            <input id="minutes" type="number" min="1" max="120" value="20" />
+          </div>
+        </div>
+
+        <div class="label">Repere anatomici e punti di applicazione (descrivi posizione)</div>
+        <textarea id="placement" placeholder="Esempio: 1) paravertebrale C7–T1 (2 cm lateralmente), 2) margine mediale scapola, 3) sovraspinato fossa, 4) deltoide post..."></textarea>
+
+        <div class="grid2">
+          <div>
+            <div class="label">Check rapido prima/dopo</div>
+            <textarea id="check" placeholder="Es. ROM, dolore (0–10), test equilibrio, controllo scapolare..."></textarea>
+          </div>
+          <div>
+            <div class="label">Note sessione</div>
+            <textarea id="notes" placeholder="Osservazioni: risposta immediata, adattamento, indicazioni domicilio..."></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- SESSIONI -->
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div style="font-weight:700">Sessioni salvate</div>
+          <div class="row">
+            <button class="btn secondary" id="btnExport">Export JSON</button>
+            <button class="btn secondary" id="btnImport">Import JSON</button>
+            <button class="btn" id="btnSaveSession">Salva sessione</button>
+          </div>
+        </div>
+
+        <div class="small" style="margin-top:8px">
+          Clicca una sessione per ricaricarla. “Elimina” rimuove solo dal browser.
+        </div>
+
+        <div style="height:10px"></div>
+        <div class="sessions" id="sessionList"></div>
+
+        <div class="hr"></div>
+
+        <div class="row">
+          <button class="btn secondary" id="btnPrint">Stampa</button>
+          <button class="btn danger" id="btnClearAll">Cancella tutto</button>
+          <button class="btn secondary" id="btnCopyViewer">Copia URL viewer</button>
+        </div>
+
+        <div class="small" style="margin-top:10px">
+          Suggerimento: fai Export JSON 1 volta a settimana come backup.
+        </div>
+      </div>
+
+      <div class="printOnly">
+        <h2>Equistasi – Scheda clinica (stampa)</h2>
+        <div class="small">Questa stampa include solo la parte clinica (il viewer 3D non viene stampato).</div>
+      </div>
+    </aside>
+
+    <!-- VIEWER 3D -->
+    <main class="right">
+      <div class="topbar">
+        <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital</div>
+        <div class="pill">Ruota: trascina • Zoom: rotella • Strumenti: toolbar</div>
+      </div>
+
+      <iframe
+        title="BioDigital – Sistema muscolo-scheletrico completo"
+        src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
+        allow="fullscreen"
+      ></iframe>
+    </main>
+  </div>
+
+  <script>
+    const BIODIGITAL_URL =
+      "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
+
+    const FORM_KEYS = [
+      "patient","date","protocol","side","goal","outcome",
+      "muscles","innervation","oi","triggers","acupoints","manual",
+      "nDevices","scheme","minutes","placement","check","notes"
+    ];
+
+    const LS_FORM = "equistasi_form_v1";
+    const LS_SESSIONS = "equistasi_sessions_v1";
+
+    function $(id){ return document.getElementById(id); }
+
+    function loadForm(){
+      const data = JSON.parse(localStorage.getItem(LS_FORM) || "{}");
+      FORM_KEYS.forEach(k=>{
+        if($(k) && data[k] !== undefined) $(k).value = data[k];
+      });
+
+      if(!$("date").value){
+        const d = new Date();
+        $("date").value = d.toISOString().slice(0,10);
+      }
+    }
+
+    function saveForm(){
+      const data = {};
+      FORM_KEYS.forEach(k=> data[k] = $(k)?.value ?? "");
+      localStorage.setItem(LS_FORM, JSON.stringify(data));
+    }
+
+    function getSessions(){
+      return JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]");
+    }
+
+    function setSessions(list){
+      localStorage.setItem(LS_SESSIONS, JSON.stringify(list));
+    }
+
+    function labelProtocol(val){
+      const map = {
+        cervicale:"Cervicale / cefalea tensiva",
+        spalla:"Spalla (dolore / controllo scapolare)",
+        dorsale:"Dorsale / scapolo-toracico",
+        lombare:"Lombare (stabilità / dolore)",
+        anca:"Anca (controllo / catena post.)",
+        ginocchio:"Ginocchio (carico / catena estensoria)",
+        caviglia:"Caviglia / piede (propriocezione)"
+      };
+      return map[val] || val || "";
+    }
+
+    function newId(){
+      return "S" + Math.random().toString(16).slice(2) + Date.now().toString(16);
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    function renderSessions(){
+      const list = getSessions();
+      const box = $("sessionList");
+      box.innerHTML = "";
+
+      if(list.length === 0){
+        box.innerHTML = `<div class="small" style="padding:10px 12px">Nessuna sessione salvata.</div>`;
+        return;
+      }
+
+      list
+        .sort((a,b)=> (b.createdAt||0) - (a.createdAt||0))
+        .forEach(s=>{
+          const div = document.createElement("div");
+          div.className = "sessionItem";
+          div.innerHTML = `
+            <div style="min-width:0">
+              <div><b>${escapeHtml(s.patient || "—")}</b> <span class="badge">${escapeHtml(s.date || "")}</span></div>
+              <div class="small" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
+                ${escapeHtml(labelProtocol(s.protocol))} • ${escapeHtml(s.side || "")} • ${escapeHtml(s.goal || "")}
+              </div>
+            </div>
+            <div class="row" style="gap:6px;flex-wrap:nowrap">
+              <span class="badge">${escapeHtml(s.outcome || "")}</span>
+              <button class="btn secondary" data-action="load" data-id="${s.id}" style="padding:8px 10px">Apri</button>
+              <button class="btn danger" data-action="del" data-id="${s.id}" style="padding:8px 10px">Elimina</button>
+            </div>
+          `;
+          box.appendChild(div);
+        });
+
+      box.querySelectorAll("button[data-action]").forEach(btn=>{
+        btn.addEventListener("click", (e)=>{
+          e.stopPropagation();
+          const action = btn.getAttribute("data-action");
+          const id = btn.getAttribute("data-id");
+          if(action === "load") loadSession(id);
+          if(action === "del") deleteSession(id);
+        });
+      });
+    }
+
+    function saveSession(){
+      const data = {};
+      FORM_KEYS.forEach(k=> data[k] = $(k)?.value ?? "");
+      data.id = newId();
+      data.createdAt = Date.now();
+
+      const list = getSessions();
+      list.push(data);
+      setSessions(list);
+      renderSessions();
+      alert("Sessione salvata.");
+    }
+
+    function loadSession(id){
+      const list = getSessions();
+      const s = list.find(x=>x.id===id);
+      if(!s) return;
+
+      FORM_KEYS.forEach(k=>{
+        if($(k) && s[k] !== undefined) $(k).value = s[k];
+      });
+
+      saveForm();
+      alert("Sessione caricata.");
+    }
+
+    function deleteSession(id){
+      if(!confirm("Eliminare questa sessione dal browser?")) return;
+      const list = getSessions().filter(x=>x.id!==id);
+      setSessions(list);
+      renderSessions();
+    }
+
+    function clearAll(){
+      if(!confirm("Cancellare TUTTO (form + sessioni) da questo browser?")) return;
+      localStorage.removeItem(LS_FORM);
+      localStorage.removeItem(LS_SESSIONS);
+      FORM_KEYS.forEach(k=> { if($(k)) $(k).value = ""; });
+      loadForm();
+      renderSessions();
+      alert("Cancellato.");
+    }
+
+    function exportJson(){
+      const payload = {
+        exportedAt: new Date().toISOString(),
+        form: JSON.parse(localStorage.getItem(LS_FORM) || "{}"),
+        sessions: getSessions()
+      };
+      const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "equistasi_backup.json";
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    function importJson(){
+      const inp = document.createElement("input");
+      inp.type = "file";
+      inp.accept = "application/json";
+      inp.onchange = () => {
+        const file = inp.files?.[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = () => {
+          try{
+            const obj = JSON.parse(reader.result);
+            if(obj.form) localStorage.setItem(LS_FORM, JSON.stringify(obj.form));
+            if(Array.isArray(obj.sessions)) localStorage.setItem(LS_SESSIONS, JSON.stringify(obj.sessions));
+            loadForm();
+            renderSessions();
+            alert("Import completato.");
+          }catch(e){
+            alert("File non valido.");
+          }
+        };
+        reader.readAsText(file);
+      };
+      inp.click();
+    }
+
+    function copyViewer(){
+      navigator.clipboard.writeText(BIODIGITAL_URL).then(
+        ()=>alert("URL viewer copiato!"),
+        ()=>prompt("Copia manualmente:", BIODIGITAL_URL)
+      );
+    }
+
+    // Autosave
+    FORM_KEYS.forEach(k=>{
+      const el = $(k);
+      if(!el) return;
+      el.addEventListener("input", saveForm);
+      el.addEventListener("change", saveForm);
+    });
+
+    // Buttons
+    $("btnSaveSession").addEventListener("click", saveSession);
+    $("btnClearAll").addEventListener("click", clearAll);
+    $("btnExport").addEventListener("click", exportJson);
+    $("btnImport").addEventListener("click", importJson);
+    $("btnCopyViewer").addEventListener("click", copyViewer);
+    $("btnPrint").addEventListener("click", ()=>window.print());
+
+    // Init
+    loadForm();
+    renderSessions();
+  </script>
 </body>
 </html>
+
 
