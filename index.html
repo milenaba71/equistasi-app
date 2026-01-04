@@ -1,174 +1,718 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<title>Equistasi – Clinica 3D</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Equistasi – Clinica 3D</title>
 
-<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <!-- Screenshot per stampa (cattura viewer + punti) -->
+  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-<style>
-html,body{margin:0;height:100%;font-family:system-ui;background:#fff}
-.app{display:grid;grid-template-columns:380px 1fr;height:100vh}
+  <style>
+    :root{
+      --bg:#0b0f14;
+      --panel:#0f1620;
+      --panel2:#111b27;
+      --txt:#e7eef8;
+      --muted:#a8b3c3;
+      --border:rgba(255,255,255,.10);
+      --accent:#2b7bff;
+      --ok:#3ddc97;
+      --danger:#ff5d5d;
 
-/* ===== LEFT PANEL ===== */
-.left{background:#f4f6f8;border-right:1px solid #ccc;padding:14px;overflow:auto}
-h1{font-size:18px;margin:0 0 10px}
-label{font-size:12px;color:#555;margin-top:8px;display:block}
-input,select,textarea{width:100%;margin-top:4px;padding:6px;font-size:13px}
-textarea{min-height:60px}
+      --paper:#ffffff;
+      --paperText:#0b0f14;
+      --paperBorder:#d9dde3;
+    }
 
-/* ===== RIGHT VIEWER ===== */
-.right{position:relative;background:#fff}
-.viewerWrap{position:absolute;inset:0}
-iframe{width:100%;height:100%;border:none;background:#fff}
+    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
+    html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
 
-/* ===== LOGO ===== */
-.logo{
-position:absolute;top:10px;right:10px;z-index:10;
-background:#fff;border:1px solid #ccc;border-radius:8px;padding:6px 10px
-}
-.logo img{height:26px}
+    .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
 
-/* ===== POINTS ===== */
-.pointsLayer{position:absolute;inset:0;z-index:8}
-.point{
-position:absolute;transform:translate(-50%,-50%);
-width:16px;height:16px;border-radius:50%;
-background:#2b7bff;border:2px solid #fff;cursor:pointer
-}
-.point::after{
-content:attr(data-label);
-position:absolute;left:18px;top:-6px;
-background:#fff;border:1px solid #aaa;
-padding:2px 6px;border-radius:6px;font-size:12px
-}
+    /* ===== LEFT (scheda) ===== */
+    .left{
+      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      border-right:1px solid var(--border);
+      padding:16px;
+      overflow:auto;
+    }
+    h1{font-size:18px;margin:0 0 8px}
+    .sub{color:var(--muted);font-size:12px;line-height:1.35;margin:0 0 12px}
 
-/* ===== PRINT IMAGE ===== */
-.printImageBox{display:none;margin-top:10px}
-.printImageBox img{width:100%;border:1px solid #ccc}
+    .card{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.03);
+      border-radius:14px;
+      padding:12px;
+      margin:12px 0;
+    }
+    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
 
-/* ===== BUTTON ===== */
-button{margin-top:8px;padding:8px 10px;font-size:13px}
+    input, select, textarea{
+      width:100%;
+      padding:10px 12px;
+      border-radius:12px;
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.04);
+      color:var(--txt);
+      outline:none;
+    }
+    textarea{min-height:90px;resize:vertical}
 
-/* ===== MOBILE ===== */
-@media (max-width:900px){
-.left{display:none}
-.app{grid-template-columns:1fr}
-}
+    .btn{
+      border:1px solid rgba(43,123,255,.45);
+      background:rgba(43,123,255,.14);
+      color:var(--txt);
+      border-radius:12px;
+      padding:10px 12px;
+      cursor:pointer;
+      font-size:13px;
+      user-select:none;
+      white-space:nowrap;
+    }
+    .btn:hover{background:rgba(43,123,255,.22)}
+    .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
+    .btn.secondary:hover{background:rgba(255,255,255,.10)}
+    .btn.danger{border:1px solid rgba(255,93,93,.35);background:rgba(255,93,93,.12)}
+    .btn.danger:hover{background:rgba(255,93,93,.18)}
 
-/* ===== PRINT ===== */
-@media print{
-.right,.logo,.pointsLayer,button{display:none!important}
-.printImageBox{display:block}
-}
-</style>
+    .pill{
+      display:inline-flex;gap:8px;align-items:center;
+      padding:6px 10px;border-radius:999px;
+      border:1px solid var(--border);
+      background:rgba(0,0,0,.25);
+      color:var(--muted);
+      font-size:12px;
+    }
+    .small{font-size:12px;color:var(--muted);line-height:1.35}
+
+    /* ===== RIGHT (viewer) ===== */
+    .right{position:relative;background:#000;overflow:hidden}
+    .viewerWrap{position:absolute;inset:0;background:#000;overflow:hidden}
+    iframe{width:100%;height:100%;border:0;display:block;background:#000}
+
+    /* Logo Equistasi (sempre visibile, “pill” bianca per evitare banda brutta) */
+    .equistasi-logo{
+      position:absolute; top:12px; right:12px; z-index:80;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.18);
+      border-radius:12px;
+      padding:6px 10px;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      gap:10px;
+    }
+    .equistasi-logo img{
+      height:26px;width:auto;display:block;max-width:180px;
+    }
+
+    /* Overlay punti Equistasi */
+    .pointsLayer{
+      position:absolute; inset:0;
+      z-index:70;
+      pointer-events:auto;
+    }
+    .point{
+      position:absolute;
+      transform:translate(-50%,-50%);
+      width:16px;height:16px;border-radius:999px;
+      background:var(--accent);
+      border:2px solid rgba(255,255,255,.98);
+      box-shadow:0 2px 10px rgba(0,0,0,.35);
+      cursor:pointer;
+    }
+    .point::after{
+      content:attr(data-label);
+      position:absolute;
+      left:18px; top:-10px;
+      background:rgba(255,255,255,.92);
+      border:1px solid rgba(0,0,0,.18);
+      color:#111;
+      padding:4px 6px;
+      border-radius:10px;
+      font-size:12px;
+      white-space:nowrap;
+      max-width:260px;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    /* Blocco vista (impedisce rotazione/zoom/pan dentro iframe) */
+    .lockShield{
+      position:absolute; inset:0;
+      z-index:75;
+      background:transparent;
+      display:none; /* attivo solo quando blocco ON */
+      pointer-events:auto;
+      touch-action:none;
+    }
+    .lockBadge{
+      position:absolute; left:12px; top:12px; z-index:90;
+      display:none;
+      background:rgba(0,0,0,.55);
+      border:1px solid rgba(255,255,255,.18);
+      color:#fff;
+      border-radius:999px;
+      padding:6px 10px;
+      font-size:12px;
+      backdrop-filter: blur(6px);
+      pointer-events:none;
+    }
+
+    /* ===== MOBILE: solo 3D verticale ===== */
+    @media (max-width: 900px){
+      .left{display:none !important}
+      .app{grid-template-columns:1fr !important}
+      .right{height:100vh;width:100vw}
+      iframe{height:100vh;width:100vw}
+
+      .equistasi-logo{top:10px;right:10px;padding:6px 8px}
+      .equistasi-logo img{height:24px}
+      .point{width:18px;height:18px}
+    }
+
+    /* ===== STAMPA (PDF) ===== */
+    .printArea{display:none}
+
+    @media print{
+      html,body{background:#fff;color:#000;overflow:visible}
+      .app{display:block;height:auto}
+      .right{display:none !important}
+      .left{display:none !important}
+      .printArea{display:block !important}
+
+      .paper{
+        padding:18mm;
+        background:var(--paper);
+        color:var(--paperText);
+        font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial;
+      }
+      .paperHeader{
+        display:flex;align-items:center;justify-content:space-between;
+        border-bottom:2px solid var(--paperBorder);
+        padding-bottom:10px;margin-bottom:12px;
+      }
+      .paperHeaderLeft h2{margin:0;font-size:18px}
+      .paperHeaderLeft .meta{margin-top:4px;font-size:12px;color:#334155}
+      .paperHeaderRight img{height:24px;width:auto;display:block}
+
+      .paperGrid{
+        display:grid;
+        grid-template-columns: 1fr 1fr;
+        gap:10px;
+        margin:10px 0 14px;
+      }
+      .paperBox{
+        border:1px solid var(--paperBorder);
+        border-radius:10px;
+        padding:10px;
+      }
+      .paperBox h3{margin:0 0 6px;font-size:13px}
+      .paperBox .p{font-size:12px;white-space:pre-wrap;margin:0}
+
+      .paperFigure{
+        margin-top:12px;
+        border:1px solid var(--paperBorder);
+        border-radius:12px;
+        overflow:hidden;
+      }
+      .paperFigure img{width:100%;display:block}
+
+      .legendTable{
+        width:100%;
+        border-collapse:collapse;
+        margin-top:12px;
+        font-size:12px;
+      }
+      .legendTable th,.legendTable td{
+        border:1px solid var(--paperBorder);
+        padding:8px;
+        vertical-align:top;
+      }
+      .legendTable th{background:#f3f6fb;text-align:left}
+    }
+  </style>
 </head>
 
 <body>
-<div class="app">
+  <div class="app">
+    <!-- ===================== LEFT: SCHEDA ===================== -->
+    <aside class="left">
+      <h1>Equistasi – Scheda clinica</h1>
+      <div class="sub">
+        • Click sul modello (a destra) per aggiungere punti Equistasi.<br/>
+        • Doppio click su un punto per eliminarlo.<br/>
+        • Preset (Cervicale/Spalla/Lombare) cambiano vista automaticamente (via URL).
+      </div>
 
-<!-- ===== LEFT PANEL ===== -->
-<aside class="left">
-<h1>Equistasi – Scheda clinica</h1>
+      <div class="card">
+        <div class="row" style="justify-content:space-between">
+          <div class="pill">Viewer: <b style="color:var(--ok)">colori anatomici originali</b></div>
+          <div class="pill" id="pillLock">Blocco vista: OFF</div>
+        </div>
+      </div>
 
-<label>Paziente</label>
-<input id="patient">
+      <div class="card">
+        <div class="grid2">
+          <div>
+            <div class="label">Paziente</div>
+            <input id="patient" placeholder="Nome / ID" />
+          </div>
+          <div>
+            <div class="label">Data</div>
+            <input id="date" type="date" />
+          </div>
+        </div>
 
-<label>Data</label>
-<input type="date" id="date">
+        <div class="grid2">
+          <div>
+            <div class="label">Preset</div>
+            <select id="preset">
+              <option value="cervicale">Cervicale (posteriore)</option>
+              <option value="spalla">Spalla (posteriore)</option>
+              <option value="lombare">Lombare (posteriore)</option>
+            </select>
+          </div>
+          <div>
+            <div class="label">Lato</div>
+            <select id="side">
+              <option value="bilaterale">Bilaterale</option>
+              <option value="destro">Destro</option>
+              <option value="sinistro">Sinistro</option>
+            </select>
+          </div>
+        </div>
 
-<label>Protocollo</label>
-<select id="protocol">
-<option>Cervicale</option>
-<option>Spalla</option>
-<option>Dorsale</option>
-<option>Lombare</option>
-<option>Anca</option>
-<option>Ginocchio</option>
-</select>
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" id="btnApplyPreset">Applica preset (cambia vista)</button>
+          <button class="btn secondary" id="btnToggleLock">Blocco vista posteriore</button>
+        </div>
 
-<label>Legenda punti Equistasi</label>
-<textarea id="legend" placeholder="P1: C7 paravertebrale&#10;P2: margine mediale scapola"></textarea>
+        <div class="small" style="margin-top:10px">
+          Nota: il cambio vista avviene tramite URL BioDigital dedicati al preset. Se vuoi viste diverse (zoom/rotazione),
+          sostituisci gli URL nella mappa <b>PRESET_URLS</b> nel codice.
+        </div>
+      </div>
 
-<button onclick="printFull()">Stampa PDF completo</button>
+      <div class="card">
+        <div class="label">Legenda punti (auto + modificabile)</div>
+        <textarea id="legend" placeholder="Qui viene generata automaticamente la legenda P1/P2/P3… con repere anatomici. Puoi modificare manualmente prima del PDF."></textarea>
 
-<div class="printImageBox">
-<h3>Modello 3D con punti Equistasi</h3>
-<img id="printImg">
-<h3>Legenda punti</h3>
-<pre id="legendPrint"></pre>
-</div>
-</aside>
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" id="btnClearPoints">Cancella punti</button>
+          <button class="btn" id="btnPrintPdf">Esporta PDF (scheda + modello + legenda)</button>
+        </div>
 
-<!-- ===== VIEWER ===== -->
-<main class="right">
-<div class="viewerWrap" id="viewerWrap">
+        <div class="small" style="margin-top:10px">
+          L’esportazione PDF crea uno screenshot del viewer (con punti) e aggiunge intestazione professionale.
+        </div>
+      </div>
+    </aside>
 
-<a class="logo" href="https://equistasi.com/contacts" target="_blank">
-<img src="./equistasi-logo.png">
-</a>
+    <!-- ===================== RIGHT: VIEWER ===================== -->
+    <main class="right">
+      <div class="viewerWrap" id="viewerWrap">
+        <!-- Badge lock -->
+        <div class="lockBadge" id="lockBadge">Vista posteriore bloccata</div>
 
-<div class="pointsLayer" id="pointsLayer"></div>
+        <!-- Logo Equistasi -->
+        <a class="equistasi-logo"
+           href="https://equistasi.com/contacts"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="Contatti Equistasi">
+          <img src="./equistasi-logo.png" alt="Equistasi" />
+        </a>
 
-<iframe
-src="https://human.biodigital.com/widget/?be=2b5y&background.colors=1,1,1,1,1,1,1,1&ui-center=true&ui-zoom=true&ui-dissect=true&ui-help=true">
-</iframe>
+        <!-- Shield lock (blocca gesture nell'iframe, ma lasciamo click sui punti tramite pointsLayer) -->
+        <div class="lockShield" id="lockShield"></div>
 
-</div>
-</main>
+        <!-- Layer punti -->
+        <div class="pointsLayer" id="pointsLayer"></div>
 
-</div>
+        <!-- BioDigital viewer -->
+        <iframe
+          id="viewer"
+          title="BioDigital – Musculoskeletal System"
+          src=""
+          allow="fullscreen"
+        ></iframe>
+      </div>
+    </main>
+  </div>
 
-<script>
-const pointsLayer=document.getElementById("pointsLayer");
-const legend=document.getElementById("legend");
-const printImg=document.getElementById("printImg");
-const legendPrint=document.getElementById("legendPrint");
-let points=[];
+  <!-- ===================== AREA STAMPA (solo print) ===================== -->
+  <section class="printArea" id="printArea">
+    <div class="paper">
+      <div class="paperHeader">
+        <div class="paperHeaderLeft">
+          <h2>Equistasi – Report applicazione (Clinica + 3D)</h2>
+          <div class="meta" id="printMeta"></div>
+        </div>
+        <div class="paperHeaderRight">
+          <img src="./equistasi-logo.png" alt="Equistasi" />
+        </div>
+      </div>
 
-function nextLabel(){return "P"+(points.length+1)}
+      <div class="paperGrid">
+        <div class="paperBox">
+          <h3>Dati paziente</h3>
+          <p class="p" id="printPatient"></p>
+        </div>
+        <div class="paperBox">
+          <h3>Preset / Lato</h3>
+          <p class="p" id="printPreset"></p>
+        </div>
+      </div>
 
-document.getElementById("viewerWrap").addEventListener("click",e=>{
-if(e.target.classList.contains("point"))return;
-const r=pointsLayer.getBoundingClientRect();
-const x=((e.clientX-r.left)/r.width)*100;
-const y=((e.clientY-r.top)/r.height)*100;
-const label=prompt("Nome punto",nextLabel());
-if(!label)return;
-points.push({x,y,label});
-render();
-});
+      <div class="paperBox">
+        <h3>Legenda punti Equistasi</h3>
+        <div id="printLegendTable"></div>
+      </div>
 
-function render(){
-pointsLayer.innerHTML="";
-points.forEach((p,i)=>{
-const d=document.createElement("div");
-d.className="point";
-d.style.left=p.x+"%";
-d.style.top=p.y+"%";
-d.dataset.label=p.label;
-d.ondblclick=e=>{
-e.stopPropagation();
-points.splice(i,1);
-render();
-};
-pointsLayer.appendChild(d);
-});
-legend.value=points.map(p=>`${p.label}: descrizione`).join("\n");
-}
+      <div class="paperFigure">
+        <img id="printShot" alt="Modello 3D con punti Equistasi" />
+      </div>
+    </div>
+  </section>
 
-async function printFull(){
-await html2canvas(document.getElementById("viewerWrap"),{backgroundColor:"#fff",scale:2})
-.then(c=>printImg.src=c.toDataURL());
-legendPrint.textContent=legend.value;
-setTimeout(()=>window.print(),300);
-}
+  <script>
+    // ===================== URL VIEWER (stabile) =====================
+    // IMPORTANTISSIMO: mantenere uaid=3Yfre per evitare errore di autenticazione.
+    // Qui usiamo lo stesso modello già funzionante + UI completa.
+    const BASE_URL =
+      "https://human.biodigital.com/widget/?" +
+      "be=2b5y" +
+      "&uaid=3Yfre" +
+      "&initial.hand-hint=true" +
+      "&ui-info=true" +
+      "&ui-fullscreen=true" +
+      "&ui-center=true" +          // centratura corpo
+      "&ui-dissect=true" +
+      "&ui-zoom=true" +
+      "&ui-help=true" +
+      "&ui-tools-display=primary";
 
-document.getElementById("date").value=new Date().toISOString().slice(0,10);
-</script>
+    /*
+      ===================== PRESET VISTE (AUTO CAMBIO) =====================
+      BioDigital non è controllabile via JS dall’esterno (cross-domain), quindi
+      “cambiare vista” = caricare un URL specifico del preset.
+
+      ORA: per sicurezza, puntano tutti a BASE_URL.
+      QUANDO VUOI: sostituisci ciascun URL con la vista “condivisa” (share link) che preferisci
+      per Cervicale/Spalla/Lombare (posteriore).
+    */
+    const PRESET_URLS = {
+      cervicale: BASE_URL,
+      spalla: BASE_URL,
+      lombare: BASE_URL,
+    };
+
+    const PRESET_LABELS = {
+      cervicale: "Cervicale (posteriore)",
+      spalla: "Spalla (posteriore)",
+      lombare: "Lombare (posteriore)",
+    };
+
+    // ===================== DOM =====================
+    const $ = (id) => document.getElementById(id);
+    const viewer = $("viewer");
+    const viewerWrap = $("viewerWrap");
+    const pointsLayer = $("pointsLayer");
+    const legend = $("legend");
+    const presetSel = $("preset");
+    const sideSel = $("side");
+
+    const lockShield = $("lockShield");
+    const lockBadge  = $("lockBadge");
+    const pillLock   = $("pillLock");
+
+    const btnApplyPreset = $("btnApplyPreset");
+    const btnToggleLock  = $("btnToggleLock");
+    const btnClearPoints = $("btnClearPoints");
+    const btnPrintPdf    = $("btnPrintPdf");
+
+    // ===================== STATE =====================
+    let points = []; // {id, xPct, yPct, code, text}
+    let isLocked = false;
+
+    // ===================== INIT DATE =====================
+    if(!$("date").value){
+      $("date").value = new Date().toISOString().slice(0,10);
+    }
+
+    // ===================== APPLY PRESET (VIEW) =====================
+    function applyPreset(force = true){
+      const key = presetSel.value;
+      const url = PRESET_URLS[key] || BASE_URL;
+
+      if(!force && viewer.getAttribute("src") === url) return;
+      viewer.setAttribute("src", url);
+
+      // quando cambi preset, rigenero legenda perché cambia contesto clinico
+      regenerateLegend();
+    }
+
+    // ===================== LOCK POSTERIOR VIEW =====================
+    // Blocco = impedire gesture (drag/zoom/pan) sul viewer, mantenendo click per punti sull’overlay.
+    function setLock(on){
+      isLocked = on;
+
+      lockShield.style.display = on ? "block" : "none";
+      lockBadge.style.display  = on ? "inline-flex" : "none";
+
+      pillLock.textContent = "Blocco vista: " + (on ? "ON" : "OFF");
+      pillLock.style.color = on ? "#fff" : "var(--muted)";
+      pillLock.style.background = on ? "rgba(61,220,151,.18)" : "rgba(0,0,0,.25)";
+      pillLock.style.borderColor = on ? "rgba(61,220,151,.35)" : "var(--border)";
+    }
+
+    // blocca tutti i gesture events verso iframe
+    ["pointerdown","pointermove","pointerup","wheel","touchstart","touchmove","touchend"].forEach(evt=>{
+      lockShield.addEventListener(evt, (e)=>{
+        e.preventDefault();
+        e.stopPropagation();
+      }, {passive:false});
+    });
+
+    // ===================== POINTS: add/remove/render =====================
+    function nextCode(){
+      // P1, P2, ...
+      const n = points.length + 1;
+      return "P" + n;
+    }
+
+    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
+
+    // Euristica: repere anatomico automatico in base a preset + y% + x% + lato
+    // (Non è “diagnostico”, è una guida pratica per la legenda clinica)
+    function autoLandmark(preset, xPct, yPct, side){
+      // lato testuale (per legenda)
+      const lat = (side === "destro") ? "dx" : (side === "sinistro") ? "sx" : "bilat";
+
+      // zona verticale
+      const zone =
+        yPct < 22 ? "alto" :
+        yPct < 45 ? "medio-alto" :
+        yPct < 68 ? "medio-basso" :
+                    "basso";
+
+      // zona laterale
+      const lateral =
+        xPct < 33 ? "laterale sx" :
+        xPct > 67 ? "laterale dx" :
+                    "linea mediana";
+
+      // Preset-specifiche (posteriori)
+      if(preset === "cervicale"){
+        if(zone === "alto") return `Suboccipitali / C1–C2 (${lat})`;
+        if(zone === "medio-alto") return `Paravertebrali C3–C5 (${lat})`;
+        if(zone === "medio-basso") return `C7–T1 paravertebrale (${lat})`;
+        return `Trapezio sup / angolo cervico-scapolare (${lat})`;
+      }
+
+      if(preset === "spalla"){
+        if(lateral === "linea mediana" && zone !== "basso") return `Romboidi / bordo mediale scapola (${lat})`;
+        if(zone === "alto") return `Trapezio sup / acromiale (${lat})`;
+        if(zone === "medio-alto") return `Infraspinato / fossa infraspinata (${lat})`;
+        if(zone === "medio-basso") return `Deltoide post / inserzione omerale (${lat})`;
+        return `Gran dorsale / piega ascellare post (${lat})`;
+      }
+
+      // lombare
+      if(preset === "lombare"){
+        if(zone === "alto") return `Paravertebrali T12–L2 (${lat})`;
+        if(zone === "medio-alto") return `Paravertebrali L2–L4 (${lat})`;
+        if(zone === "medio-basso") return `Paravertebrali L4–L5 (${lat})`;
+        // basso
+        if(lateral === "linea mediana") return `Sacro / S1–S2 (${lat})`;
+        return `Cresta iliaca / quadrato dei lombi (${lat})`;
+      }
+
+      // fallback
+      return `Repere posteriore (${lat}) – ${zone}, ${lateral}`;
+    }
+
+    function renderPoints(){
+      pointsLayer.innerHTML = "";
+      points.forEach(p=>{
+        const el = document.createElement("div");
+        el.className = "point";
+        el.style.left = p.xPct + "%";
+        el.style.top  = p.yPct + "%";
+        el.dataset.label = `${p.code}: ${p.text}`;
+
+        el.addEventListener("dblclick", (e)=>{
+          e.stopPropagation();
+          points = points.filter(pp => pp.id !== p.id);
+          renumberPoints();
+          renderPoints();
+          regenerateLegend();
+        });
+
+        pointsLayer.appendChild(el);
+      });
+    }
+
+    function renumberPoints(){
+      points = points.map((p, idx) => ({...p, code: "P" + (idx+1)}));
+    }
+
+    // click per aggiungere punto (su overlay, non sull'iframe)
+    pointsLayer.addEventListener("click", (e)=>{
+      // se clic su punto, non aggiungere
+      if(e.target.closest(".point")) return;
+
+      const rect = pointsLayer.getBoundingClientRect();
+      const x = clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100);
+      const y = clamp(((e.clientY - rect.top)  / rect.height)* 100, 0, 100);
+
+      const preset = presetSel.value;
+      const side = sideSel.value;
+
+      const code = nextCode();
+      const autoText = autoLandmark(preset, x, y, side);
+
+      // Consentiamo modifica rapida, ma precompilata
+      const text = prompt(`Descrizione repere per ${code}:`, autoText);
+      if(!text) return;
+
+      points.push({
+        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
+        xPct: x,
+        yPct: y,
+        code,
+        text: text.trim()
+      });
+
+      renderPoints();
+      regenerateLegend();
+    });
+
+    function regenerateLegend(){
+      // Legenda testuale editabile (textarea) + usata per tabella PDF
+      const lines = points.map(p => `${p.code}: ${p.text}`);
+      legend.value = lines.join("\n");
+    }
+
+    // ===================== PDF EXPORT (intestazione + screenshot + tabella legenda) =====================
+    function parseLegendToRows(){
+      // Usa punti (source of truth) per stampa: più affidabile del testo manuale.
+      // Se vuoi rispettare anche modifiche manuali: usa legend.value parsing.
+      return points.map(p => ({code: p.code, text: p.text}));
+    }
+
+    function buildLegendTableHTML(rows){
+      if(rows.length === 0){
+        return `<div style="font-size:12px;color:#475569">Nessun punto registrato.</div>`;
+      }
+      const trs = rows.map(r => `
+        <tr>
+          <td style="width:80px"><b>${escapeHtml(r.code)}</b></td>
+          <td>${escapeHtml(r.text)}</td>
+        </tr>
+      `).join("");
+      return `
+        <table class="legendTable">
+          <thead><tr><th>Punto</th><th>Repere anatomico / descrizione</th></tr></thead>
+          <tbody>${trs}</tbody>
+        </table>
+      `;
+    }
+
+    function escapeHtml(s){
+      return String(s ?? "")
+        .replaceAll("&","&amp;")
+        .replaceAll("<","&lt;")
+        .replaceAll(">","&gt;")
+        .replaceAll('"',"&quot;")
+        .replaceAll("'","&#039;");
+    }
+
+    async function captureViewerScreenshot(){
+      // Catturiamo SOLO il viewerWrap (iframe + overlay punti + badge/logo se presenti).
+      // html2canvas con iframe cross-domain: può funzionare “visivamente” in molti casi,
+      // ma se il browser lo blocca, la stampa avrà almeno la legenda (e puoi fare screenshot manuale).
+      const canvas = await html2canvas(viewerWrap, {
+        backgroundColor: "#000000",
+        scale: 2,
+        useCORS: true,
+        allowTaint: true,
+        logging: false
+      });
+      return canvas.toDataURL("image/png");
+    }
+
+    btnPrintPdf.addEventListener("click", async ()=>{
+      // Popola intestazione professionale
+      const patient = $("patient").value?.trim() || "—";
+      const date = $("date").value || "—";
+      const presetKey = presetSel.value;
+      const presetLabel = PRESET_LABELS[presetKey] || presetKey;
+      const side = sideSel.value;
+
+      $("printMeta").textContent = `Data: ${date} • Documento generato per report clinico Equistasi`;
+      $("printPatient").textContent = `Paziente: ${patient}`;
+      $("printPreset").textContent = `Preset: ${presetLabel}\nLato: ${side}`;
+
+      // Legenda tabellare
+      const rows = parseLegendToRows();
+      $("printLegendTable").innerHTML = buildLegendTableHTML(rows);
+
+      // Screenshot
+      try{
+        // piccola attesa per stabilizzare
+        await new Promise(r=>setTimeout(r, 200));
+        const shot = await captureViewerScreenshot();
+        $("printShot").src = shot;
+      }catch(e){
+        // Se screenshot bloccato, lasciamo immagine vuota ma PDF esce con legenda e intestazione.
+        console.warn("Screenshot viewer non disponibile in questo browser:", e);
+        $("printShot").removeAttribute("src");
+        $("printShot").alt = "Screenshot viewer non disponibile: stampa senza immagine.";
+      }
+
+      // Stampa -> salva come PDF
+      window.print();
+    });
+
+    // ===================== BUTTONS =====================
+    btnApplyPreset.addEventListener("click", ()=>applyPreset(true));
+
+    btnToggleLock.addEventListener("click", ()=>{
+      setLock(!isLocked);
+    });
+
+    btnClearPoints.addEventListener("click", ()=>{
+      if(!confirm("Cancellare tutti i punti Equistasi?")) return;
+      points = [];
+      renderPoints();
+      regenerateLegend();
+    });
+
+    presetSel.addEventListener("change", ()=>{
+      applyPreset(true);
+      // per applicazione Equistasi: di default, quando cambi preset attivo il blocco posteriore
+      // (puoi disattivarlo col bottone)
+      setLock(true);
+    });
+
+    sideSel.addEventListener("change", ()=>{
+      regenerateLegend();
+    });
+
+    // ===================== INIT =====================
+    applyPreset(true);
+    setLock(true); // per applicazione Equistasi: partiamo con vista bloccata
+    regenerateLegend();
+  </script>
 </body>
 </html>
+>
 
 
 
