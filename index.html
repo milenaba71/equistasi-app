@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Equistasi – Clinica (Demo)</title>
+  <title>Equistasi – Clinica + 3D</title>
 
   <style>
     :root{
@@ -55,6 +55,7 @@
       cursor:pointer;
       font-size:13px;
       user-select:none;
+      white-space:nowrap;
     }
     .btn:hover{background:rgba(77,163,255,.20)}
     .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
@@ -86,32 +87,30 @@
     }
     .topbar .pill{pointer-events:auto}
 
-    /* ===== Logo Equistasi (DENTRO il viewer, così non viene coperto dal WebGL) ===== */
+    /* ===== Logo Equistasi (dentro viewer, cliccabile, bianco/monocromatico) ===== */
     .equistasi-logo{
-      position: absolute;
-      top: 14px;
-      right: 14px;
-      z-index: 20;
-      background: rgba(0,0,0,0.6);
-      border: 1px solid rgba(255,255,255,0.18);
-      border-radius: 12px;
-      padding: 6px 10px;
+      position:absolute;
+      top:14px;
+      right:14px;
+      z-index:20;
+      background:rgba(0,0,0,.60);
+      border:1px solid rgba(255,255,255,.18);
+      border-radius:12px;
+      padding:6px 10px;
       backdrop-filter: blur(6px);
-      text-decoration: none;
-      display: inline-flex;
-      align-items: center;
-      pointer-events: auto;
+      text-decoration:none;
+      display:inline-flex;
+      align-items:center;
+      pointer-events:auto;
     }
-    .equistasi-logo:hover{ background: rgba(0,0,0,0.75); }
+    .equistasi-logo:hover{ background:rgba(0,0,0,.75); }
     .equistasi-logo:focus{ outline:2px solid rgba(77,163,255,.55); outline-offset:2px; }
-
     .equistasi-logo img{
-      height: 26px;
-      width: auto;
-      display: block;
-      /* monocromatico bianco */
+      height:26px;
+      width:auto;
+      display:block;
       filter: grayscale(1) brightness(8) contrast(1.1);
-      opacity: 0.95;
+      opacity:.95;
     }
 
     .sessions{
@@ -154,6 +153,7 @@
       <h1>Equistasi – Scheda clinica</h1>
       <div class="sub">
         Distretto → target muscoli → repere → posizionamento Equistasi → note manuali (trigger point / repere) → obiettivo.
+        <br/>Selezionando il protocollo, il viewer 3D cambia vista (via URL).
       </div>
 
       <div class="card">
@@ -218,6 +218,14 @@
               <option value="peggiora">Peggiora</option>
             </select>
           </div>
+        </div>
+
+        <div class="row" style="margin-top:10px">
+          <button class="btn secondary" id="btnCopyViewUrl">Copia URL vista attuale</button>
+          <button class="btn secondary" id="btnReloadView">Ricarica vista protocollo</button>
+        </div>
+        <div class="small" style="margin-top:8px">
+          Suggerimento: per impostare la vista di un protocollo, apri la vista nel viewer, copia il link (share) e incollalo nella mappa URL dentro al codice.
         </div>
       </div>
 
@@ -319,7 +327,7 @@
         <div class="row">
           <button class="btn secondary" id="btnPrint">Stampa</button>
           <button class="btn danger" id="btnClearAll">Cancella tutto</button>
-          <button class="btn secondary" id="btnCopyViewer">Copia URL viewer</button>
+          <button class="btn secondary" id="btnCopyViewer">Copia URL base viewer</button>
         </div>
 
         <div class="small" style="margin-top:10px">
@@ -335,7 +343,7 @@
 
     <!-- VIEWER 3D -->
     <main class="right">
-      <!-- Logo Equistasi (cliccabile) -->
+      <!-- Logo Equistasi (cliccabile, monocromatico) -->
       <a class="equistasi-logo"
          href="https://equistasi.com/contacts"
          target="_blank"
@@ -346,27 +354,55 @@
 
       <div class="topbar">
         <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital</div>
-        <div class="pill">Ruota: trascina • Zoom: rotella • Strumenti: toolbar</div>
+        <div class="pill" id="viewHint">Vista: —</div>
       </div>
 
       <iframe
+        id="viewer"
         title="BioDigital – Sistema muscolo-scheletrico completo"
-        src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
+        src=""
         allow="fullscreen"
       ></iframe>
     </main>
   </div>
 
   <script>
-    const BIODIGITAL_URL =
+    // === URL base che già funziona (vista generica) ===
+    const BASE_VIEW_URL =
       "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
 
+    /*
+      === PROTOCOLLO -> URL VISTA 3D ===
+      Per attivare la "vista automatica", sostituisci ogni valore con l'URL BioDigital
+      che corrisponde alla vista che vuoi (es. vista posteriore cervicale, vista spalla, ecc.)
+      Per ora sono tutti BASE_VIEW_URL (così non si rompe nulla).
+    */
+    const PROTOCOL_VIEW_URLS = {
+      cervicale: BASE_VIEW_URL,
+      spalla: BASE_VIEW_URL,
+      dorsale: BASE_VIEW_URL,
+      lombare: BASE_VIEW_URL,
+      anca: BASE_VIEW_URL,
+      ginocchio: BASE_VIEW_URL,
+      caviglia: BASE_VIEW_URL
+    };
+
+    const PROTOCOL_LABELS = {
+      cervicale: "Cervicale / cefalea tensiva",
+      spalla: "Spalla (dolore / controllo scapolare)",
+      dorsale: "Dorsale / scapolo-toracico",
+      lombare: "Lombare (stabilità / dolore)",
+      anca: "Anca (controllo / catena post.)",
+      ginocchio: "Ginocchio (carico / catena estensoria)",
+      caviglia: "Caviglia / piede (propriocezione)"
+    };
+
+    // ===== Form / storage =====
     const FORM_KEYS = [
       "patient","date","protocol","side","goal","outcome",
       "muscles","innervation","oi","triggers","acupoints","manual",
       "nDevices","scheme","minutes","placement","check","notes"
     ];
-
     const LS_FORM = "equistasi_form_v1";
     const LS_SESSIONS = "equistasi_sessions_v1";
 
@@ -381,6 +417,9 @@
       if(!$("date").value){
         $("date").value = new Date().toISOString().slice(0,10);
       }
+      if(!$("protocol").value){
+        $("protocol").value = "cervicale";
+      }
     }
 
     function saveForm(){
@@ -392,26 +431,8 @@
     function getSessions(){
       return JSON.parse(localStorage.getItem(LS_SESSIONS) || "[]");
     }
-
     function setSessions(list){
       localStorage.setItem(LS_SESSIONS, JSON.stringify(list));
-    }
-
-    function labelProtocol(val){
-      const map = {
-        cervicale:"Cervicale / cefalea tensiva",
-        spalla:"Spalla (dolore / controllo scapolare)",
-        dorsale:"Dorsale / scapolo-toracico",
-        lombare:"Lombare (stabilità / dolore)",
-        anca:"Anca (controllo / catena post.)",
-        ginocchio:"Ginocchio (carico / catena estensoria)",
-        caviglia:"Caviglia / piede (propriocezione)"
-      };
-      return map[val] || val || "";
-    }
-
-    function newId(){
-      return "S" + Math.random().toString(16).slice(2) + Date.now().toString(16);
     }
 
     function escapeHtml(s){
@@ -421,6 +442,10 @@
         .replaceAll(">","&gt;")
         .replaceAll('"',"&quot;")
         .replaceAll("'","&#039;");
+    }
+
+    function newId(){
+      return "S" + Math.random().toString(16).slice(2) + Date.now().toString(16);
     }
 
     function renderSessions(){
@@ -442,7 +467,7 @@
             <div style="min-width:0">
               <div><b>${escapeHtml(s.patient || "—")}</b> <span class="badge">${escapeHtml(s.date || "")}</span></div>
               <div class="small" style="margin-top:4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">
-                ${escapeHtml(labelProtocol(s.protocol))} • ${escapeHtml(s.side || "")} • ${escapeHtml(s.goal || "")}
+                ${escapeHtml(PROTOCOL_LABELS[s.protocol] || s.protocol || "")} • ${escapeHtml(s.side || "")} • ${escapeHtml(s.goal || "")}
               </div>
             </div>
             <div class="row" style="gap:6px;flex-wrap:nowrap">
@@ -488,6 +513,7 @@
       });
 
       saveForm();
+      apply3DViewForProtocol($("protocol").value, true);
       alert("Sessione caricata.");
     }
 
@@ -505,6 +531,7 @@
       FORM_KEYS.forEach(k=> { if($(k)) $(k).value = ""; });
       loadForm();
       renderSessions();
+      apply3DViewForProtocol($("protocol").value, true);
       alert("Cancellato.");
     }
 
@@ -538,6 +565,7 @@
             if(Array.isArray(obj.sessions)) localStorage.setItem(LS_SESSIONS, JSON.stringify(obj.sessions));
             loadForm();
             renderSessions();
+            apply3DViewForProtocol($("protocol").value, true);
             alert("Import completato.");
           }catch(e){
             alert("File non valido.");
@@ -548,14 +576,40 @@
       inp.click();
     }
 
-    function copyViewer(){
-      navigator.clipboard.writeText(BIODIGITAL_URL).then(
-        ()=>alert("URL viewer copiato!"),
-        ()=>prompt("Copia manualmente:", BIODIGITAL_URL)
+    // ===== 3D View switching (protocollo -> URL) =====
+    function apply3DViewForProtocol(protocol, forceReload=false){
+      const viewer = $("viewer");
+      const url = PROTOCOL_VIEW_URLS[protocol] || BASE_VIEW_URL;
+
+      // Aggiorna hint
+      const label = PROTOCOL_LABELS[protocol] || protocol || "—";
+      $("viewHint").textContent = "Vista: " + label;
+
+      // Evita reload inutili, a meno che forceReload = true
+      if(!forceReload && viewer.getAttribute("src") === url) return;
+
+      viewer.setAttribute("src", url);
+    }
+
+    function copyText(txt){
+      return navigator.clipboard.writeText(txt).then(
+        ()=>alert("Copiato!"),
+        ()=>prompt("Copia manualmente:", txt)
       );
     }
 
-    // Autosave
+    // ===== Buttons viewer url =====
+    function copyViewerBase(){
+      return copyText(BASE_VIEW_URL);
+    }
+
+    function copyCurrentViewUrl(){
+      const protocol = $("protocol").value;
+      const url = PROTOCOL_VIEW_URLS[protocol] || BASE_VIEW_URL;
+      return copyText(url);
+    }
+
+    // ===== Autosave =====
     FORM_KEYS.forEach(k=>{
       const el = $(k);
       if(!el) return;
@@ -563,20 +617,30 @@
       el.addEventListener("change", saveForm);
     });
 
+    // Protocol change -> cambia vista 3D
+    $("protocol").addEventListener("change", ()=>{
+      saveForm();
+      apply3DViewForProtocol($("protocol").value, true);
+    });
+
     // Buttons
     $("btnSaveSession").addEventListener("click", saveSession);
     $("btnClearAll").addEventListener("click", clearAll);
     $("btnExport").addEventListener("click", exportJson);
     $("btnImport").addEventListener("click", importJson);
-    $("btnCopyViewer").addEventListener("click", copyViewer);
+    $("btnCopyViewer").addEventListener("click", copyViewerBase);
+    $("btnCopyViewUrl").addEventListener("click", copyCurrentViewUrl);
+    $("btnReloadView").addEventListener("click", ()=>apply3DViewForProtocol($("protocol").value, true));
     $("btnPrint").addEventListener("click", ()=>window.print());
 
     // Init
     loadForm();
     renderSessions();
+    apply3DViewForProtocol($("protocol").value, true);
   </script>
 </body>
 </html>
+
 
 
 
