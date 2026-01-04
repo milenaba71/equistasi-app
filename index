@@ -5,22 +5,13 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Equistasi App</title>
   <style>
-    body, html {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      background: #000;
-    }
-    iframe {
-      width: 100%;
-      height: 100%;
-      border: none;
-    }
+    html, body { margin:0; height:100%; background:#000; }
+    iframe { width:100%; height:100%; border:0; display:block; }
   </style>
 </head>
 <body>
   <iframe
-    src="https://human.biodigital.com/widget/?be=2b5y&ui-info=true&ui-fullscreen=true"
+    src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
     allow="fullscreen">
   </iframe>
 </body>
