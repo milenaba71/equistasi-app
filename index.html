@@ -87,7 +87,7 @@
     }
     .topbar .pill{pointer-events:auto}
 
-    /* ===== Logo Equistasi (dentro viewer, cliccabile, bianco/monocromatico) ===== */
+    /* ===== Logo Equistasi (dentro viewer, cliccabile, stile “monocromatico” su sfondo scuro) ===== */
     .equistasi-logo{
       position:absolute;
       top:14px;
@@ -105,12 +105,18 @@
     }
     .equistasi-logo:hover{ background:rgba(0,0,0,.75); }
     .equistasi-logo:focus{ outline:2px solid rgba(77,163,255,.55); outline-offset:2px; }
+
     .equistasi-logo img{
       height:26px;
       width:auto;
       display:block;
-      filter: grayscale(1) brightness(8) contrast(1.1);
+
+      /* FIX: se il PNG ha sfondo bianco, questo evita la “banda bianca” */
+      filter: invert(1) grayscale(1) brightness(1.8) contrast(1.2);
       opacity:.95;
+
+      /* evita loghi troppo larghi */
+      max-width:180px;
     }
 
     .sessions{
@@ -221,11 +227,11 @@
         </div>
 
         <div class="row" style="margin-top:10px">
-          <button class="btn secondary" id="btnCopyViewUrl">Copia URL vista attuale</button>
+          <button class="btn secondary" id="btnCopyViewUrl">Copia URL vista protocollo</button>
           <button class="btn secondary" id="btnReloadView">Ricarica vista protocollo</button>
         </div>
         <div class="small" style="margin-top:8px">
-          Suggerimento: per impostare la vista di un protocollo, apri la vista nel viewer, copia il link (share) e incollalo nella mappa URL dentro al codice.
+          Per definire una vista: imposta zoom/rotazione nel viewer e usa l’URL condiviso come “vista protocollo”.
         </div>
       </div>
 
@@ -343,7 +349,6 @@
 
     <!-- VIEWER 3D -->
     <main class="right">
-      <!-- Logo Equistasi (cliccabile, monocromatico) -->
       <a class="equistasi-logo"
          href="https://equistasi.com/contacts"
          target="_blank"
@@ -367,16 +372,10 @@
   </div>
 
   <script>
-    // === URL base che già funziona (vista generica) ===
     const BASE_VIEW_URL =
       "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
 
-    /*
-      === PROTOCOLLO -> URL VISTA 3D ===
-      Per attivare la "vista automatica", sostituisci ogni valore con l'URL BioDigital
-      che corrisponde alla vista che vuoi (es. vista posteriore cervicale, vista spalla, ecc.)
-      Per ora sono tutti BASE_VIEW_URL (così non si rompe nulla).
-    */
+    // Sostituisci questi URL con i link delle viste specifiche (una per protocollo)
     const PROTOCOL_VIEW_URLS = {
       cervicale: BASE_VIEW_URL,
       spalla: BASE_VIEW_URL,
@@ -397,7 +396,6 @@
       caviglia: "Caviglia / piede (propriocezione)"
     };
 
-    // ===== Form / storage =====
     const FORM_KEYS = [
       "patient","date","protocol","side","goal","outcome",
       "muscles","innervation","oi","triggers","acupoints","manual",
@@ -413,13 +411,8 @@
       FORM_KEYS.forEach(k=>{
         if($(k) && data[k] !== undefined) $(k).value = data[k];
       });
-
-      if(!$("date").value){
-        $("date").value = new Date().toISOString().slice(0,10);
-      }
-      if(!$("protocol").value){
-        $("protocol").value = "cervicale";
-      }
+      if(!$("date").value) $("date").value = new Date().toISOString().slice(0,10);
+      if(!$("protocol").value) $("protocol").value = "cervicale";
     }
 
     function saveForm(){
@@ -576,18 +569,13 @@
       inp.click();
     }
 
-    // ===== 3D View switching (protocollo -> URL) =====
     function apply3DViewForProtocol(protocol, forceReload=false){
       const viewer = $("viewer");
       const url = PROTOCOL_VIEW_URLS[protocol] || BASE_VIEW_URL;
-
-      // Aggiorna hint
       const label = PROTOCOL_LABELS[protocol] || protocol || "—";
       $("viewHint").textContent = "Vista: " + label;
 
-      // Evita reload inutili, a meno che forceReload = true
       if(!forceReload && viewer.getAttribute("src") === url) return;
-
       viewer.setAttribute("src", url);
     }
 
@@ -598,18 +586,13 @@
       );
     }
 
-    // ===== Buttons viewer url =====
-    function copyViewerBase(){
-      return copyText(BASE_VIEW_URL);
+    function copyViewerBase(){ return copyText(BASE_VIEW_URL); }
+    function copyProtocolViewUrl(){
+      const p = $("protocol").value;
+      return copyText(PROTOCOL_VIEW_URLS[p] || BASE_VIEW_URL);
     }
 
-    function copyCurrentViewUrl(){
-      const protocol = $("protocol").value;
-      const url = PROTOCOL_VIEW_URLS[protocol] || BASE_VIEW_URL;
-      return copyText(url);
-    }
-
-    // ===== Autosave =====
+    // Autosave
     FORM_KEYS.forEach(k=>{
       const el = $(k);
       if(!el) return;
@@ -629,7 +612,7 @@
     $("btnExport").addEventListener("click", exportJson);
     $("btnImport").addEventListener("click", importJson);
     $("btnCopyViewer").addEventListener("click", copyViewerBase);
-    $("btnCopyViewUrl").addEventListener("click", copyCurrentViewUrl);
+    $("btnCopyViewUrl").addEventListener("click", copyProtocolViewUrl);
     $("btnReloadView").addEventListener("click", ()=>apply3DViewForProtocol($("protocol").value, true));
     $("btnPrint").addEventListener("click", ()=>window.print());
 
@@ -640,6 +623,7 @@
   </script>
 </body>
 </html>
+
 
 
 
