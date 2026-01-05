@@ -3,60 +3,39 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Equistasi – Clinica 3D</title>
-
-  <!-- Screenshot per stampa -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+  <title>Equistasi – Modello 3D (IT/EN)</title>
 
   <style>
     :root{
       --bg:#0b0f14;
       --panel:#0f1620;
-      --panel2:#111b27;
       --txt:#e7eef8;
       --muted:#a8b3c3;
       --border:rgba(255,255,255,.10);
       --accent:#2b7bff;
-      --ok:#3ddc97;
-
-      --paper:#ffffff;
-      --paperText:#0b0f14;
-      --paperBorder:#d9dde3;
     }
-
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
-    .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
 
-    /* LEFT */
+    .app{display:grid;grid-template-columns:360px 1fr;height:100vh}
+
+    /* Pannello (desktop) */
     .left{
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
+      background:linear-gradient(180deg,var(--panel),#101b29);
       border-right:1px solid var(--border);
-      padding:16px;
+      padding:14px;
       overflow:auto;
     }
-    h1{font-size:18px;margin:0 0 8px}
-    .sub{color:var(--muted);font-size:12px;line-height:1.35;margin:0 0 12px}
+    h1{margin:0 0 10px;font-size:16px}
+    .small{font-size:12px;color:var(--muted);line-height:1.35}
     .card{
+      margin-top:12px;
       border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
       border-radius:14px;
       padding:12px;
-      margin:12px 0;
+      background:rgba(255,255,255,.03);
     }
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input, select, textarea{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--txt);
-      outline:none;
-    }
-    textarea{min-height:90px;resize:vertical}
+    .row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
     .btn{
       border:1px solid rgba(43,123,255,.45);
       background:rgba(43,123,255,.14);
@@ -69,520 +48,165 @@
       white-space:nowrap;
     }
     .btn:hover{background:rgba(43,123,255,.22)}
-    .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
+    .btn.secondary{
+      border:1px solid var(--border);
+      background:rgba(255,255,255,.06);
+    }
     .btn.secondary:hover{background:rgba(255,255,255,.10)}
+
     .pill{
-      display:inline-flex;gap:8px;align-items:center;
-      padding:6px 10px;border-radius:999px;
+      display:inline-flex;
+      gap:8px;
+      align-items:center;
+      padding:6px 10px;
+      border-radius:999px;
       border:1px solid var(--border);
       background:rgba(0,0,0,.25);
       color:var(--muted);
       font-size:12px;
     }
-    .small{font-size:12px;color:var(--muted);line-height:1.35}
 
-    /* RIGHT */
+    /* Viewer */
     .right{position:relative;background:#000;overflow:hidden}
-    .viewerWrap{position:absolute;inset:0;background:#000;overflow:hidden}
     iframe{width:100%;height:100%;border:0;display:block;background:#000}
 
-    /* Logo Equistasi */
-    .equistasi-logo{
-      position:absolute; top:12px; right:12px; z-index:90;
-      background:rgba(255,255,255,.92);
-      border:1px solid rgba(0,0,0,.18);
-      border-radius:12px;
-      padding:6px 10px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-    }
-    .equistasi-logo img{height:26px;width:auto;display:block;max-width:180px}
-
-    /* ===== IMPORTANT FIX =====
-       lockShield deve stare SOPRA l'iframe ma SOTTO i punti */
-    .lockShield{
-      position:absolute; inset:0;
-      z-index:60;          /* < pointsLayer (70) */
-      background:transparent;
-      display:none;
-      pointer-events:auto;
-      touch-action:none;
-    }
-
-    .pointsLayer{
-      position:absolute; inset:0;
-      z-index:70;          /* sopra lockShield */
-      pointer-events:auto;
-    }
-
-    .point{
-      position:absolute;
-      transform:translate(-50%,-50%);
-      width:16px;height:16px;border-radius:999px;
-      background:var(--accent);
-      border:2px solid rgba(255,255,255,.98);
-      box-shadow:0 2px 10px rgba(0,0,0,.35);
-      cursor:pointer;
-    }
-    .point::after{
-      content:attr(data-label);
-      position:absolute;
-      left:18px; top:-10px;
-      background:rgba(255,255,255,.92);
-      border:1px solid rgba(0,0,0,.18);
-      color:#111;
-      padding:4px 6px;
-      border-radius:10px;
-      font-size:12px;
-      white-space:nowrap;
-      max-width:300px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .lockBadge{
-      position:absolute; left:12px; top:12px; z-index:85;
-      display:none;
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.18);
-      color:#fff;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      backdrop-filter: blur(6px);
+    /* Barra top nel viewer */
+    .topbar{
+      position:absolute;left:12px;top:12px;right:12px;
+      display:flex;justify-content:space-between;gap:10px;
+      z-index:5;
       pointer-events:none;
     }
+    .topbar .pill{pointer-events:auto}
 
-    /* MOBILE: solo viewer */
+    /* Mobile: SOLO 3D */
     @media (max-width:900px){
       .left{display:none !important}
       .app{grid-template-columns:1fr !important}
-      .right{height:100vh;width:100vw}
-      iframe{height:100vh;width:100vw}
-      .equistasi-logo{top:10px;right:10px;padding:6px 8px}
-      .equistasi-logo img{height:24px}
-      .point{width:18px;height:18px}
-    }
-
-    /* ===== STAMPA PDF ===== */
-    .printArea{display:none}
-
-    @media print{
-      html,body{background:#fff;color:#000;overflow:visible}
-      .app{display:none !important}
-      .printArea{display:block !important}
-
-      .paper{
-        padding:18mm;
-        background:var(--paper);
-        color:var(--paperText);
-      }
-      .paperHeader{
-        display:flex;align-items:center;justify-content:space-between;
-        border-bottom:2px solid var(--paperBorder);
-        padding-bottom:10px;margin-bottom:12px;
-      }
-      .paperHeaderLeft h2{margin:0;font-size:18px}
-      .paperHeaderLeft .meta{margin-top:4px;font-size:12px;color:#334155}
-      .paperHeaderRight img{height:24px;width:auto;display:block}
-      .paperGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
-      .paperBox{border:1px solid var(--paperBorder);border-radius:10px;padding:10px}
-      .paperBox h3{margin:0 0 6px;font-size:13px}
-      .paperBox .p{font-size:12px;white-space:pre-wrap;margin:0}
-      .paperFigure{margin-top:12px;border:1px solid var(--paperBorder);border-radius:12px;overflow:hidden}
-      .paperFigure img{width:100%;display:block}
-      .legendTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
-      .legendTable th,.legendTable td{border:1px solid var(--paperBorder);padding:8px;vertical-align:top}
-      .legendTable th{background:#f3f6fb;text-align:left}
+      .right{width:100vw;height:100vh}
+      iframe{width:100vw;height:100vh}
     }
   </style>
 </head>
 
 <body>
   <div class="app">
-    <!-- LEFT -->
+    <!-- LEFT (desktop) -->
     <aside class="left">
-      <h1>Equistasi – Scheda clinica</h1>
-      <div class="sub">
-        • Click sul modello per aggiungere punti • Doppio click su un punto per eliminarlo.<br>
-        • Preset cambiano vista (tramite URL). • “Blocco vista” blocca rotazioni/zoom ma lascia i punti.
+      <h1>Modello 3D – Muscoli (IT / EN)</h1>
+
+      <div class="small">
+        Seleziona la lingua: il viewer ricarica con <b>lang=it</b> o <b>lang=en</b>.
+        <br/>Obiettivo: vedere <b>nomi dei muscoli</b> e <b>descrizioni</b> nella lingua scelta.
       </div>
 
       <div class="card">
         <div class="row" style="justify-content:space-between">
-          <div class="pill">Viewer: <b style="color:var(--ok)">colori originali</b></div>
-          <div class="pill" id="pillLock">Blocco: OFF</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="grid2">
-          <div>
-            <div class="label">Paziente</div>
-            <input id="patient" placeholder="Nome / ID" />
-          </div>
-          <div>
-            <div class="label">Data</div>
-            <input id="date" type="date" />
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div>
-            <div class="label">Preset</div>
-            <select id="preset">
-              <option value="cervicale">Cervicale (posteriore)</option>
-              <option value="spalla">Spalla (posteriore)</option>
-              <option value="lombare">Lombare (posteriore)</option>
-            </select>
-          </div>
-          <div>
-            <div class="label">Lato</div>
-            <select id="side">
-              <option value="bilaterale">Bilaterale</option>
-              <option value="destro">Destro</option>
-              <option value="sinistro">Sinistro</option>
-            </select>
-          </div>
+          <div class="pill">Lingua attiva: <b id="langLabel" style="color:var(--txt)">Italiano</b></div>
+          <div class="pill" id="statusPill">Status: pronto</div>
         </div>
 
         <div class="row" style="margin-top:10px">
-          <button class="btn secondary" id="btnApplyPreset">Applica preset</button>
-          <button class="btn secondary" id="btnToggleLock">Blocco vista posteriore</button>
+          <button class="btn" id="btnIT">Italiano</button>
+          <button class="btn secondary" id="btnEN">English</button>
         </div>
 
         <div class="small" style="margin-top:10px">
-          Se vuoi vere viste diverse (zoom/rotazione), apri BioDigital, imposta la vista,
-          copia l’URL e sostituiscilo nella mappa PRESET_URLS nel codice.
+          Suggerimento: nel viewer abilita “Labels / Info” se disponibili per vedere nomi e descrizioni.
+          Se questo widget non mostra le descrizioni, serve passare al viewer standard BioDigital.
         </div>
       </div>
 
       <div class="card">
-        <div class="label">Legenda punti (auto + modificabile)</div>
-        <textarea id="legend" placeholder="Generata automaticamente: P1: ... P2: ..."></textarea>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn secondary" id="btnClearPoints">Cancella punti</button>
-          <button class="btn" id="btnPrintPdf">Esporta PDF</button>
+        <div class="small">
+          <b>URL base (tuo):</b><br/>
+          <span style="word-break:break-all;opacity:.9" id="baseUrlText"></span>
         </div>
       </div>
     </aside>
 
     <!-- RIGHT -->
     <main class="right">
-      <div class="viewerWrap" id="viewerWrap">
-        <div class="lockBadge" id="lockBadge">Vista bloccata (posteriore)</div>
-
-        <a class="equistasi-logo"
-           href="https://equistasi.com/contacts"
-           target="_blank"
-           rel="noopener noreferrer">
-          <img src="./equistasi-logo.png" alt="Equistasi">
-        </a>
-
-        <!-- Shield blocca SOLO gesture sul viewer (sotto ai punti) -->
-        <div class="lockShield" id="lockShield"></div>
-
-        <!-- Punti sopra tutto (tranne logo/badge) -->
-        <div class="pointsLayer" id="pointsLayer"></div>
-
-        <!-- IFRAME: url in una sola riga, con uaid -->
-        <iframe
-          id="viewer"
-          title="BioDigital – Sistema muscolo-scheletrico completo"
-          src=""
-          allow="fullscreen"
-          allowfullscreen
-        ></iframe>
+      <div class="topbar">
+        <div class="pill">BioDigital • Muscular Whole</div>
+        <div class="pill">IT/EN switch</div>
       </div>
+
+      <iframe id="viewer" title="BioDigital Human (IT/EN)" src="" allow="fullscreen"></iframe>
     </main>
   </div>
 
-  <!-- PRINT -->
-  <section class="printArea" id="printArea">
-    <div class="paper">
-      <div class="paperHeader">
-        <div class="paperHeaderLeft">
-          <h2>Equistasi – Report applicazione (Clinica + 3D)</h2>
-          <div class="meta" id="printMeta"></div>
-        </div>
-        <div class="paperHeaderRight">
-          <img src="./equistasi-logo.png" alt="Equistasi">
-        </div>
-      </div>
-
-      <div class="paperGrid">
-        <div class="paperBox">
-          <h3>Dati paziente</h3>
-          <p class="p" id="printPatient"></p>
-        </div>
-        <div class="paperBox">
-          <h3>Preset / Lato</h3>
-          <p class="p" id="printPreset"></p>
-        </div>
-      </div>
-
-      <div class="paperBox">
-        <h3>Legenda punti Equistasi</h3>
-        <div id="printLegendTable"></div>
-      </div>
-
-      <div class="paperFigure">
-        <img id="printShot" alt="Modello 3D con punti Equistasi">
-      </div>
-    </div>
-  </section>
-
   <script>
-    const $ = (id) => document.getElementById(id);
+    // ====== 1) La tua URL (Healthline widget) ======
+    const BASE_WIDGET_URL =
+      "https://human.biodigital.com/widgets/healthline/?" +
+      "m=production/femaleAdult/female_system_anatomy_muscular_whole.json" +
+      "&s=female" +
+      "&camera=-150.4,128.314,-134.935,-0.011,90.122,4.701,0.127,0.983,0.132" +
+      "&initial=true" +
+      "&load-rotate=15" +
+      "&ui-fullscreen=false" +
+      "&ui-share=false" +
+      "&uaid=2glnP";
 
-    // ===== URL stabile (NO background.colors) =====
-    const BASE_URL =
-      "https://human.biodigital.com/widget/?be=2b5y" +
-      "&uaid=3Yfre" +
-      "&initial.hand-hint=true" +
-      "&ui-info=true" +
-      "&ui-fullscreen=true" +
-      "&ui-center=true" +
-      "&ui-dissect=true" +
-      "&ui-zoom=true" +
-      "&ui-help=true" +
-      "&ui-tools-display=primary";
-
-    // ===== Preset: per ora base. Sostituisci con URL “vista condivisa” quando li hai =====
-    const PRESET_URLS = {
-      cervicale: BASE_URL,
-      spalla: BASE_URL,
-      lombare: BASE_URL
+    // ====== 2) Parametri extra per etichette/descrizioni (se supportati dal widget) ======
+    // Alcuni embed li ignorano: non rompe nulla.
+    const EXTRA_UI_PARAMS = {
+      // tenta di mostrare descrizioni e lista etichette (se il widget lo consente)
+      "ui-anatomy-descriptions": "true",
+      "ui-label-list": "true",
+      "ui-search": "true",
+      "ui-info": "true",
+      // in molti viewer "ui-tools" abilita barra strumenti
+      "ui-tools": "true"
     };
 
-    const PRESET_LABELS = {
-      cervicale: "Cervicale (posteriore)",
-      spalla: "Spalla (posteriore)",
-      lombare: "Lombare (posteriore)"
-    };
+    const viewer = document.getElementById("viewer");
+    const langLabel = document.getElementById("langLabel");
+    const statusPill = document.getElementById("statusPill");
+    const baseUrlText = document.getElementById("baseUrlText");
 
-    const viewer = $("viewer");
-    const viewerWrap = $("viewerWrap");
-    const pointsLayer = $("pointsLayer");
-    const lockShield = $("lockShield");
-    const lockBadge = $("lockBadge");
-    const pillLock = $("pillLock");
-    const legend = $("legend");
+    baseUrlText.textContent = BASE_WIDGET_URL;
 
-    const presetSel = $("preset");
-    const sideSel = $("side");
-
-    let points = [];
-    let isLocked = false;
-
-    // Init date
-    if(!$("date").value){
-      $("date").value = new Date().toISOString().slice(0,10);
+    function setStatus(text){
+      statusPill.textContent = "Status: " + text;
     }
 
-    function applyPreset(force=true){
-      const key = presetSel.value;
-      const url = PRESET_URLS[key] || BASE_URL;
-      if(!force && viewer.src === url) return;
+    function buildUrlWithLang(lang){
+      // usa URL API per aggiungere/aggiornare parametri in modo sicuro
+      const u = new URL(BASE_WIDGET_URL);
+
+      // forza lingua
+      u.searchParams.set("lang", lang); // it / en
+
+      // aggiunge parametri UI extra
+      Object.entries(EXTRA_UI_PARAMS).forEach(([k,v]) => {
+        if (!u.searchParams.has(k)) u.searchParams.set(k, v);
+      });
+
+      return u.toString();
+    }
+
+    function applyLanguage(lang){
+      setStatus("caricamento…");
+
+      const isIt = (lang === "it");
+      langLabel.textContent = isIt ? "Italiano" : "English";
+      document.documentElement.lang = isIt ? "it" : "en";
+
+      const url = buildUrlWithLang(lang);
       viewer.src = url;
-      regenerateLegend();
+
+      // piccolo feedback quando iframe ha finito di caricare
+      viewer.onload = () => setStatus("caricato");
     }
 
-    // ===== Lock gesture sul viewer (ma NON sui punti) =====
-    function setLock(on){
-      isLocked = on;
-      lockShield.style.display = on ? "block" : "none";
-      lockBadge.style.display  = on ? "inline-flex" : "none";
-      pillLock.textContent = "Blocco: " + (on ? "ON" : "OFF");
-      pillLock.style.borderColor = on ? "rgba(61,220,151,.35)" : "rgba(255,255,255,.10)";
-      pillLock.style.background  = on ? "rgba(61,220,151,.14)" : "rgba(0,0,0,.25)";
-      pillLock.style.color = on ? "#fff" : "var(--muted)";
-    }
+    // Bottoni
+    document.getElementById("btnIT").addEventListener("click", () => applyLanguage("it"));
+    document.getElementById("btnEN").addEventListener("click", () => applyLanguage("en"));
 
-    ["pointerdown","pointermove","pointerup","wheel","touchstart","touchmove","touchend"].forEach(evt=>{
-      lockShield.addEventListener(evt, (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-      }, {passive:false});
-    });
-
-    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-
-    function autoLandmark(preset, xPct, yPct, side){
-      const lat = (side === "destro") ? "dx" : (side === "sinistro") ? "sx" : "bilat";
-      const zone =
-        yPct < 22 ? "alto" :
-        yPct < 45 ? "medio-alto" :
-        yPct < 68 ? "medio-basso" :
-                    "basso";
-      const lateral =
-        xPct < 33 ? "laterale sx" :
-        xPct > 67 ? "laterale dx" :
-                    "linea mediana";
-
-      if(preset === "cervicale"){
-        if(zone === "alto") return `Suboccipitali / C1–C2 (${lat})`;
-        if(zone === "medio-alto") return `Paravertebrali C3–C5 (${lat})`;
-        if(zone === "medio-basso") return `C7–T1 paravertebrale (${lat})`;
-        return `Trapezio sup / angolo cervico-scapolare (${lat})`;
-      }
-      if(preset === "spalla"){
-        if(lateral === "linea mediana" && zone !== "basso") return `Romboidi / bordo mediale scapola (${lat})`;
-        if(zone === "alto") return `Trapezio sup / acromiale (${lat})`;
-        if(zone === "medio-alto") return `Infraspinato / fossa infraspinata (${lat})`;
-        if(zone === "medio-basso") return `Deltoide post / inserzione omerale (${lat})`;
-        return `Gran dorsale / piega ascellare post (${lat})`;
-      }
-      if(preset === "lombare"){
-        if(zone === "alto") return `Paravertebrali T12–L2 (${lat})`;
-        if(zone === "medio-alto") return `Paravertebrali L2–L4 (${lat})`;
-        if(zone === "medio-basso") return `Paravertebrali L4–L5 (${lat})`;
-        if(lateral === "linea mediana") return `Sacro / S1–S2 (${lat})`;
-        return `Cresta iliaca / quadrato dei lombi (${lat})`;
-      }
-      return `Repere posteriore (${lat}) – ${zone}, ${lateral}`;
-    }
-
-    function renderPoints(){
-      pointsLayer.innerHTML = "";
-      points.forEach(p=>{
-        const el = document.createElement("div");
-        el.className = "point";
-        el.style.left = p.xPct + "%";
-        el.style.top  = p.yPct + "%";
-        el.dataset.label = `${p.code}: ${p.text}`;
-
-        el.addEventListener("dblclick", (e)=>{
-          e.stopPropagation();
-          points = points.filter(pp => pp.id !== p.id);
-          points = points.map((pp, idx)=>({...pp, code:"P"+(idx+1)}));
-          renderPoints();
-          regenerateLegend();
-        });
-
-        pointsLayer.appendChild(el);
-      });
-    }
-
-    function regenerateLegend(){
-      legend.value = points.map(p => `${p.code}: ${p.text}`).join("\n");
-    }
-
-    // Click per aggiungere punto (sopra viewer)
-    pointsLayer.addEventListener("click", (e)=>{
-      if(e.target.closest(".point")) return;
-
-      const rect = pointsLayer.getBoundingClientRect();
-      const x = clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100);
-      const y = clamp(((e.clientY - rect.top)  / rect.height)* 100, 0, 100);
-
-      const preset = presetSel.value;
-      const side = sideSel.value;
-
-      const code = "P" + (points.length + 1);
-      const suggested = autoLandmark(preset, x, y, side);
-      const text = prompt(`Descrizione repere per ${code}:`, suggested);
-      if(!text) return;
-
-      points.push({
-        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
-        xPct:x, yPct:y,
-        code,
-        text:text.trim()
-      });
-
-      renderPoints();
-      regenerateLegend();
-    });
-
-    // ===== PDF =====
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-
-    function buildLegendTableHTML(rows){
-      if(rows.length === 0) return `<div style="font-size:12px;color:#475569">Nessun punto registrato.</div>`;
-      return `
-        <table class="legendTable">
-          <thead><tr><th>Punto</th><th>Repere anatomico / descrizione</th></tr></thead>
-          <tbody>
-            ${rows.map(r=>`<tr><td style="width:80px"><b>${escapeHtml(r.code)}</b></td><td>${escapeHtml(r.text)}</td></tr>`).join("")}
-          </tbody>
-        </table>
-      `;
-    }
-
-    async function captureViewerScreenshot(){
-      const canvas = await html2canvas(viewerWrap, {
-        backgroundColor: "#000000",
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false
-      });
-      return canvas.toDataURL("image/png");
-    }
-
-    $("btnPrintPdf").addEventListener("click", async ()=>{
-      const patient = $("patient").value?.trim() || "—";
-      const date = $("date").value || "—";
-      const presetKey = presetSel.value;
-      const presetLabel = PRESET_LABELS[presetKey] || presetKey;
-      const side = sideSel.value;
-
-      $("printMeta").textContent = `Data: ${date} • Report applicazione Equistasi`;
-      $("printPatient").textContent = `Paziente: ${patient}`;
-      $("printPreset").textContent = `Preset: ${presetLabel}\nLato: ${side}`;
-
-      const rows = points.map(p=>({code:p.code, text:p.text}));
-      $("printLegendTable").innerHTML = buildLegendTableHTML(rows);
-
-      try{
-        await new Promise(r=>setTimeout(r, 200));
-        const shot = await captureViewerScreenshot();
-        $("printShot").src = shot;
-      }catch(err){
-        console.warn("Screenshot non disponibile:", err);
-        $("printShot").removeAttribute("src");
-        $("printShot").alt = "Screenshot viewer non disponibile in questo browser.";
-      }
-
-      window.print();
-    });
-
-    // Buttons
-    $("btnApplyPreset").addEventListener("click", ()=>applyPreset(true));
-    $("btnToggleLock").addEventListener("click", ()=>setLock(!isLocked));
-    $("btnClearPoints").addEventListener("click", ()=>{
-      if(!confirm("Cancellare tutti i punti Equistasi?")) return;
-      points = [];
-      renderPoints();
-      regenerateLegend();
-    });
-
-    presetSel.addEventListener("change", ()=>{
-      applyPreset(true);
-      setLock(true); // per applicazione Equistasi: blocco ON quando cambio preset
-    });
-
-    sideSel.addEventListener("change", regenerateLegend);
-
-    // INIT
-    applyPreset(true);
-    setLock(true);
-    regenerateLegend();
+    // Avvio: Italiano
+    applyLanguage("it");
   </script>
 </body>
 </html>
-
-
-
-
-
-
-
-
