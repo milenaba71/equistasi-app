@@ -1,759 +1,172 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Equistasi – Clinica 3D (IT/EN)</title>
+<meta charset="UTF-8">
+<title>Equistasi – Clinica 3D</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <!-- PDF screenshot -->
-  <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
 
-  <style>
-    :root{
-      --bg:#0b0f14;
-      --panel:#0f1620;
-      --panel2:#111b27;
-      --txt:#e7eef8;
-      --muted:#a8b3c3;
-      --border:rgba(255,255,255,.10);
-      --accent:#2b7bff;
-      --ok:#3ddc97;
+<style>
+html,body{margin:0;height:100%;font-family:system-ui;background:#fff}
+.app{display:grid;grid-template-columns:380px 1fr;height:100vh}
 
-      --paper:#ffffff;
-      --paperText:#0b0f14;
-      --paperBorder:#d9dde3;
-    }
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
+/* ===== LEFT PANEL ===== */
+.left{background:#f4f6f8;border-right:1px solid #ccc;padding:14px;overflow:auto}
+h1{font-size:18px;margin:0 0 10px}
+label{font-size:12px;color:#555;margin-top:8px;display:block}
+input,select,textarea{width:100%;margin-top:4px;padding:6px;font-size:13px}
+textarea{min-height:60px}
 
-    .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
+/* ===== RIGHT VIEWER ===== */
+.right{position:relative;background:#fff}
+.viewerWrap{position:absolute;inset:0}
+iframe{width:100%;height:100%;border:none;background:#fff}
 
-    /* LEFT */
-    .left{
-      background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border-right:1px solid var(--border);
-      padding:16px;
-      overflow:auto;
-    }
-    h1{font-size:18px;margin:0 0 8px}
-    .sub{color:var(--muted);font-size:12px;line-height:1.35;margin:0 0 12px}
+/* ===== LOGO ===== */
+.logo{
+position:absolute;top:10px;right:10px;z-index:10;
+background:#fff;border:1px solid #ccc;border-radius:8px;padding:6px 10px
+}
+.logo img{height:26px}
 
-    .card{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:12px;
-      margin:12px 0;
-    }
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
+/* ===== POINTS ===== */
+.pointsLayer{position:absolute;inset:0;z-index:8}
+.point{
+position:absolute;transform:translate(-50%,-50%);
+width:16px;height:16px;border-radius:50%;
+background:#2b7bff;border:2px solid #fff;cursor:pointer
+}
+.point::after{
+content:attr(data-label);
+position:absolute;left:18px;top:-6px;
+background:#fff;border:1px solid #aaa;
+padding:2px 6px;border-radius:6px;font-size:12px
+}
 
-    input, select, textarea{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--txt);
-      outline:none;
-    }
-    textarea{min-height:90px;resize:vertical}
+/* ===== PRINT IMAGE ===== */
+.printImageBox{display:none;margin-top:10px}
+.printImageBox img{width:100%;border:1px solid #ccc}
 
-    .btn{
-      border:1px solid rgba(43,123,255,.45);
-      background:rgba(43,123,255,.14);
-      color:var(--txt);
-      border-radius:12px;
-      padding:10px 12px;
-      cursor:pointer;
-      font-size:13px;
-      user-select:none;
-      white-space:nowrap;
-    }
-    .btn:hover{background:rgba(43,123,255,.22)}
-    .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
-    .btn.secondary:hover{background:rgba(255,255,255,.10)}
+/* ===== BUTTON ===== */
+button{margin-top:8px;padding:8px 10px;font-size:13px}
 
-    .pill{
-      display:inline-flex;gap:8px;align-items:center;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.25);
-      color:var(--muted);
-      font-size:12px;
-    }
-    .small{font-size:12px;color:var(--muted);line-height:1.35}
+/* ===== MOBILE ===== */
+@media (max-width:900px){
+.left{display:none}
+.app{grid-template-columns:1fr}
+}
 
-    /* RIGHT */
-    .right{position:relative;background:#000;overflow:hidden}
-    .viewerWrap{position:absolute;inset:0;background:#000;overflow:hidden}
-    iframe{width:100%;height:100%;border:0;display:block;background:#000}
-
-    /* Logo Equistasi */
-    .equistasi-logo{
-      position:absolute; top:12px; right:12px; z-index:90;
-      background:rgba(255,255,255,.92);
-      border:1px solid rgba(0,0,0,.18);
-      border-radius:12px;
-      padding:6px 10px;
-      text-decoration:none;
-      display:inline-flex;
-      align-items:center;
-    }
-    .equistasi-logo img{height:26px;width:auto;display:block;max-width:180px}
-
-    /* Google Translate box (top-left viewer area) */
-    .gtBox{
-      position:absolute; top:12px; left:12px; z-index:95;
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.18);
-      border-radius:12px;
-      padding:8px 10px;
-      backdrop-filter: blur(6px);
-      color:#fff;
-    }
-    .gtTitle{font-size:12px;opacity:.9;margin-bottom:6px}
-    #google_translate_element{font-size:12px}
-    /* Riduce un po' lo stile del widget Google */
-    .goog-te-gadget{color:#fff !important}
-    .goog-te-gadget span{display:none} /* nasconde "Powered by" testo (resta il menu) */
-    .goog-te-combo{border-radius:10px;padding:6px 8px}
-
-    /* Lock */
-    .lockShield{
-      position:absolute; inset:0;
-      z-index:60;
-      background:transparent;
-      display:none;
-      pointer-events:auto;
-      touch-action:none;
-    }
-    .pointsLayer{
-      position:absolute; inset:0;
-      z-index:70;
-      pointer-events:auto;
-    }
-    .point{
-      position:absolute;
-      transform:translate(-50%,-50%);
-      width:16px;height:16px;border-radius:999px;
-      background:var(--accent);
-      border:2px solid rgba(255,255,255,.98);
-      box-shadow:0 2px 10px rgba(0,0,0,.35);
-      cursor:pointer;
-    }
-    .point::after{
-      content:attr(data-label);
-      position:absolute;
-      left:18px; top:-10px;
-      background:rgba(255,255,255,.92);
-      border:1px solid rgba(0,0,0,.18);
-      color:#111;
-      padding:4px 6px;
-      border-radius:10px;
-      font-size:12px;
-      white-space:nowrap;
-      max-width:320px;
-      overflow:hidden;
-      text-overflow:ellipsis;
-    }
-
-    .lockBadge{
-      position:absolute; left:12px; bottom:12px; z-index:85;
-      display:none;
-      background:rgba(0,0,0,.55);
-      border:1px solid rgba(255,255,255,.18);
-      color:#fff;
-      border-radius:999px;
-      padding:6px 10px;
-      font-size:12px;
-      backdrop-filter: blur(6px);
-      pointer-events:none;
-    }
-
-    /* MOBILE: solo 3D */
-    @media (max-width:900px){
-      .left{display:none !important}
-      .app{grid-template-columns:1fr !important}
-      .right{height:100vh;width:100vw}
-      iframe{height:100vh;width:100vw}
-      .equistasi-logo{top:10px;right:10px;padding:6px 8px}
-      .equistasi-logo img{height:24px}
-      .point{width:18px;height:18px}
-      .gtBox{top:10px;left:10px}
-    }
-
-    /* PRINT */
-    .printArea{display:none}
-    @media print{
-      .app{display:none !important}
-      .printArea{display:block !important}
-      html,body{background:#fff;color:#000;overflow:visible}
-
-      .paper{padding:18mm;background:var(--paper);color:var(--paperText)}
-      .paperHeader{
-        display:flex;align-items:center;justify-content:space-between;
-        border-bottom:2px solid var(--paperBorder);
-        padding-bottom:10px;margin-bottom:12px;
-      }
-      .paperHeaderLeft h2{margin:0;font-size:18px}
-      .paperHeaderLeft .meta{margin-top:4px;font-size:12px;color:#334155}
-      .paperHeaderRight img{height:24px;width:auto;display:block}
-      .paperGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:10px 0 14px}
-      .paperBox{border:1px solid var(--paperBorder);border-radius:10px;padding:10px}
-      .paperBox h3{margin:0 0 6px;font-size:13px}
-      .paperBox .p{font-size:12px;white-space:pre-wrap;margin:0}
-      .paperFigure{margin-top:12px;border:1px solid var(--paperBorder);border-radius:12px;overflow:hidden}
-      .paperFigure img{width:100%;display:block}
-      .legendTable{width:100%;border-collapse:collapse;margin-top:10px;font-size:12px}
-      .legendTable th,.legendTable td{border:1px solid var(--paperBorder);padding:8px;vertical-align:top}
-      .legendTable th{background:#f3f6fb;text-align:left}
-    }
-  </style>
+/* ===== PRINT ===== */
+@media print{
+.right,.logo,.pointsLayer,button{display:none!important}
+.printImageBox{display:block}
+}
+</style>
 </head>
 
 <body>
-  <div class="app">
-    <!-- LEFT -->
-    <aside class="left">
-      <h1 id="t_title">Equistasi – Scheda clinica</h1>
-      <div class="sub" id="t_sub">
-        • Click sul modello per aggiungere punti • Doppio click per eliminare.<br>
-        • Il traduttore Google traduce la scheda, ma NON l’iframe 3D (limite tecnico).
-      </div>
-
-      <div class="card">
-        <div class="row" style="justify-content:space-between">
-          <div class="pill"><span id="t_viewer">Viewer</span>: <b style="color:var(--ok)">OK</b></div>
-          <div class="pill" id="pillLock">Lock: OFF</div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn" id="btnIT">Italiano</button>
-          <button class="btn secondary" id="btnEN">English</button>
-          <button class="btn secondary" id="btnOpen3D">Apri 3D</button>
-        </div>
-
-        <div class="small" style="margin-top:10px" id="t_hint">
-          Consiglio: per le etichette in IT/EN usa <b>lang=it</b> / <b>lang=en</b> sul viewer.
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="grid2">
-          <div>
-            <div class="label" id="t_patient">Paziente</div>
-            <input id="patient" placeholder="Nome / ID" />
-          </div>
-          <div>
-            <div class="label" id="t_date">Data</div>
-            <input id="date" type="date" />
-          </div>
-        </div>
-
-        <div class="grid2">
-          <div>
-            <div class="label" id="t_preset">Preset</div>
-            <select id="preset">
-              <option value="cervicale">Cervicale – C7/T1 (posteriore)</option>
-              <option value="spalla">Spalla (posteriore)</option>
-              <option value="lombare">Lombare – L5 (posteriore)</option>
-            </select>
-          </div>
-          <div>
-            <div class="label" id="t_side">Lato</div>
-            <select id="side">
-              <option value="bilaterale">Bilaterale</option>
-              <option value="destro">Destro</option>
-              <option value="sinistro">Sinistro</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn secondary" id="btnApplyPreset">Applica preset</button>
-          <button class="btn secondary" id="btnToggleLock">Blocco vista</button>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="label" id="t_legend">Legenda punti Equistasi</div>
-        <textarea id="legend" placeholder="P1: ...&#10;P2: ..."></textarea>
-
-        <div class="row" style="margin-top:10px">
-          <button class="btn secondary" id="btnClearPoints">Cancella punti</button>
-          <button class="btn" id="btnPrintPdf">Esporta PDF</button>
-        </div>
-      </div>
-    </aside>
-
-    <!-- RIGHT -->
-    <main class="right">
-      <div class="viewerWrap" id="viewerWrap">
-        <!-- Google Translate -->
-        <div class="gtBox">
-          <div class="gtTitle">Google Translate</div>
-          <div id="google_translate_element"></div>
-        </div>
-
-        <div class="lockBadge" id="lockBadge">Vista bloccata</div>
-
-        <a class="equistasi-logo"
-           href="https://equistasi.com/contacts"
-           target="_blank"
-           rel="noopener noreferrer">
-          <img src="./equistasi-logo.png" alt="Equistasi">
-        </a>
-
-        <div class="lockShield" id="lockShield"></div>
-        <div class="pointsLayer" id="pointsLayer"></div>
-
-        <iframe
-          id="viewer"
-          title="BioDigital – Sistema muscolo-scheletrico completo"
-          src=""
-          allow="fullscreen"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </main>
-  </div>
-
-  <!-- PRINT -->
-  <section class="printArea" id="printArea">
-    <div class="paper">
-      <div class="paperHeader">
-        <div class="paperHeaderLeft">
-          <h2 id="p_title">Equistasi – Report applicazione</h2>
-          <div class="meta" id="printMeta"></div>
-        </div>
-        <div class="paperHeaderRight">
-          <img src="./equistasi-logo.png" alt="Equistasi">
-        </div>
-      </div>
-
-      <div class="paperGrid">
-        <div class="paperBox">
-          <h3 id="p_patient_h">Dati paziente</h3>
-          <p class="p" id="printPatient"></p>
-        </div>
-        <div class="paperBox">
-          <h3 id="p_preset_h">Preset / Lato</h3>
-          <p class="p" id="printPreset"></p>
-        </div>
-      </div>
-
-      <div class="paperBox">
-        <h3 id="p_legend_h">Legenda punti Equistasi</h3>
-        <div id="printLegendTable"></div>
-      </div>
-
-      <div class="paperFigure">
-        <img id="printShot" alt="Modello 3D con punti Equistasi">
-      </div>
-    </div>
-  </section>
-
-  <script>
-    const $ = (id) => document.getElementById(id);
-
-    // ====== URL PRESET (metti qui i tuoi link diversi quando li hai) ======
-    // (Per ora puoi lasciare uguali: il modello carica comunque)
-    const PRESET_URLS = {
-      cervicale: "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre",
-      spalla:    "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre",
-      lombare:   "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre"
-    };
-
-    const PRESET_LABELS_IT = {
-      cervicale: "Cervicale – C7/T1 (posteriore)",
-      spalla: "Spalla (posteriore)",
-      lombare: "Lombare – L5 (posteriore)"
-    };
-
-    const PRESET_LABELS_EN = {
-      cervicale: "Cervical – C7/T1 (posterior)",
-      spalla: "Shoulder (posterior)",
-      lombare: "Lumbar – L5 (posterior)"
-    };
-
-    // ====== UI testi IT/EN (la scheda cambia lingua senza dipendere da Google) ======
-    const UI = {
-      it: {
-        title: "Equistasi – Scheda clinica",
-        sub: "• Click sul modello per aggiungere punti • Doppio click per eliminare.\n• Il traduttore Google traduce la scheda, ma NON l’iframe 3D (limite tecnico).",
-        viewer: "Viewer",
-        hint: "Consiglio: per le etichette in IT/EN usa lang=it / lang=en sul viewer.",
-        patient: "Paziente",
-        date: "Data",
-        preset: "Preset",
-        side: "Lato",
-        legend: "Legenda punti Equistasi",
-        applyPreset: "Applica preset",
-        lock: "Blocco vista",
-        clear: "Cancella punti",
-        pdf: "Esporta PDF",
-        open3d: "Apri 3D",
-        lockOn: "Lock: ON",
-        lockOff: "Lock: OFF",
-        lockedBadge: "Vista bloccata",
-        pdfTitle: "Equistasi – Report applicazione",
-        pdfPatientH: "Dati paziente",
-        pdfPresetH: "Preset / Lato",
-        pdfLegendH: "Legenda punti Equistasi"
-      },
-      en: {
-        title: "Equistasi – Clinical form",
-        sub: "• Click on the model to add points • Double click to delete.\n• Google Translate translates this form, but NOT the 3D iframe (technical limitation).",
-        viewer: "Viewer",
-        hint: "Tip: for labels in IT/EN use lang=it / lang=en on the viewer URL.",
-        patient: "Patient",
-        date: "Date",
-        preset: "Preset",
-        side: "Side",
-        legend: "Equistasi points legend",
-        applyPreset: "Apply preset",
-        lock: "Lock view",
-        clear: "Clear points",
-        pdf: "Export PDF",
-        open3d: "Open 3D",
-        lockOn: "Lock: ON",
-        lockOff: "Lock: OFF",
-        lockedBadge: "View locked",
-        pdfTitle: "Equistasi – Application report",
-        pdfPatientH: "Patient data",
-        pdfPresetH: "Preset / Side",
-        pdfLegendH: "Equistasi points legend"
-      }
-    };
-
-    const viewer = $("viewer");
-    const viewerWrap = $("viewerWrap");
-    const pointsLayer = $("pointsLayer");
-    const lockShield = $("lockShield");
-    const lockBadge = $("lockBadge");
-    const pillLock = $("pillLock");
-    const legend = $("legend");
-    const presetSel = $("preset");
-    const sideSel = $("side");
-
-    let points = [];
-    let isLocked = false;
-    let currentLang = localStorage.getItem("eq_lang") || "it";
-
-    // init date
-    if(!$("date").value){
-      $("date").value = new Date().toISOString().slice(0,10);
-    }
-
-    function setLang(lang){
-      currentLang = (lang === "en") ? "en" : "it";
-      localStorage.setItem("eq_lang", currentLang);
-      document.documentElement.lang = currentLang;
-
-      // aggiorna testi UI
-      const t = UI[currentLang];
-      $("t_title").textContent = t.title;
-      $("t_sub").textContent = t.sub;
-      $("t_viewer").textContent = t.viewer;
-      $("t_hint").textContent = t.hint;
-      $("t_patient").textContent = t.patient;
-      $("t_date").textContent = t.date;
-      $("t_preset").textContent = t.preset;
-      $("t_side").textContent = t.side;
-      $("t_legend").textContent = t.legend;
-
-      $("btnApplyPreset").textContent = t.applyPreset;
-      $("btnToggleLock").textContent = t.lock;
-      $("btnClearPoints").textContent = t.clear;
-      $("btnPrintPdf").textContent = t.pdf;
-      $("btnOpen3D").textContent = t.open3d;
-
-      lockBadge.textContent = t.lockedBadge;
-      $("p_title").textContent = t.pdfTitle;
-      $("p_patient_h").textContent = t.pdfPatientH;
-      $("p_preset_h").textContent = t.pdfPresetH;
-      $("p_legend_h").textContent = t.pdfLegendH;
-
-      // aggiorna label preset visibili
-      const labels = (currentLang === "en") ? PRESET_LABELS_EN : PRESET_LABELS_IT;
-      [...presetSel.options].forEach(opt=>{
-        opt.textContent = labels[opt.value] || opt.value;
-      });
-
-      // applica di nuovo il preset (con lang nel viewer)
-      applyPreset(true);
-      setLock(isLocked);
-    }
-
-    function withLang(url, lang){
-      const u = new URL(url);
-      // prova a forzare lingua BioDigital (se supportata dal modello)
-      u.searchParams.set("lang", lang);
-      return u.toString();
-    }
-
-    function applyPreset(force=true){
-      const key = presetSel.value;
-      const base = PRESET_URLS[key] || PRESET_URLS.cervicale;
-      const url = withLang(base, currentLang);
-
-      if(!force && viewer.src === url) return;
-      viewer.src = url;
-
-      regenerateLegend();
-    }
-
-    function setLock(on){
-      isLocked = on;
-      lockShield.style.display = on ? "block" : "none";
-      lockBadge.style.display  = on ? "inline-flex" : "none";
-      pillLock.textContent = on ? UI[currentLang].lockOn : UI[currentLang].lockOff;
-      pillLock.style.borderColor = on ? "rgba(61,220,151,.35)" : "rgba(255,255,255,.10)";
-      pillLock.style.background  = on ? "rgba(61,220,151,.14)" : "rgba(0,0,0,.25)";
-      pillLock.style.color = on ? "#fff" : "var(--muted)";
-    }
-
-    ["pointerdown","pointermove","pointerup","wheel","touchstart","touchmove","touchend"].forEach(evt=>{
-      lockShield.addEventListener(evt, (e)=>{
-        e.preventDefault();
-        e.stopPropagation();
-      }, {passive:false});
-    });
-
-    function clamp(n,min,max){ return Math.max(min, Math.min(max, n)); }
-
-    // repere automatico (semplice)
-    function autoLandmark(preset, yPct, side){
-      const lat = (side === "destro") ? (currentLang==="en"?"right":"dx") :
-                  (side === "sinistro") ? (currentLang==="en"?"left":"sx") :
-                  (currentLang==="en"?"bilat":"bilat");
-
-      const zone =
-        yPct < 22 ? "high" :
-        yPct < 45 ? "midHigh" :
-        yPct < 68 ? "midLow" : "low";
-
-      if(preset === "cervicale"){
-        if(currentLang==="en"){
-          if(zone==="high") return `Suboccipitals C1–C2 (${lat})`;
-          if(zone==="midHigh") return `Paraspinals C3–C5 (${lat})`;
-          if(zone==="midLow") return `C7–T1 paraspinal (${lat})`;
-          return `Upper trapezius / cervico-scapular area (${lat})`;
-        }else{
-          if(zone==="high") return `Suboccipitali C1–C2 (${lat})`;
-          if(zone==="midHigh") return `Paravertebrali C3–C5 (${lat})`;
-          if(zone==="midLow") return `C7–T1 paravertebrale (${lat})`;
-          return `Trapezio sup / area cervico-scapolare (${lat})`;
-        }
-      }
-
-      if(preset === "spalla"){
-        if(currentLang==="en"){
-          if(zone==="high") return `Upper trapezius / acromial (${lat})`;
-          if(zone==="midHigh") return `Rhomboids / medial scapular border (${lat})`;
-          if(zone==="midLow") return `Infraspinatus / posterior deltoid (${lat})`;
-          return `Latissimus / posterior axillary fold (${lat})`;
-        }else{
-          if(zone==="high") return `Trapezio sup / acromiale (${lat})`;
-          if(zone==="midHigh") return `Romboidi / bordo mediale scapola (${lat})`;
-          if(zone==="midLow") return `Infraspinato / deltoide post (${lat})`;
-          return `Gran dorsale / piega ascellare post (${lat})`;
-        }
-      }
-
-      // lombare
-      if(currentLang==="en"){
-        if(zone==="high") return `Paraspinals T12–L2 (${lat})`;
-        if(zone==="midHigh") return `Paraspinals L2–L4 (${lat})`;
-        if(zone==="midLow") return `Paraspinals L4–L5 (${lat})`;
-        return `Sacrum / iliac crest (${lat})`;
-      }else{
-        if(zone==="high") return `Paravertebrali T12–L2 (${lat})`;
-        if(zone==="midHigh") return `Paravertebrali L2–L4 (${lat})`;
-        if(zone==="midLow") return `Paravertebrali L4–L5 (${lat})`;
-        return `Sacro / cresta iliaca (${lat})`;
-      }
-    }
-
-    function renderPoints(){
-      pointsLayer.innerHTML = "";
-      points.forEach(p=>{
-        const el = document.createElement("div");
-        el.className = "point";
-        el.style.left = p.xPct + "%";
-        el.style.top  = p.yPct + "%";
-        el.dataset.label = `${p.code}: ${p.text}`;
-
-        el.addEventListener("dblclick", (e)=>{
-          e.stopPropagation();
-          points = points.filter(pp => pp.id !== p.id);
-          points = points.map((pp, idx)=>({...pp, code:"P"+(idx+1)}));
-          renderPoints();
-          regenerateLegend();
-        });
-
-        pointsLayer.appendChild(el);
-      });
-    }
-
-    function regenerateLegend(){
-      legend.value = points.map(p => `${p.code}: ${p.text}`).join("\n");
-    }
-
-    pointsLayer.addEventListener("click", (e)=>{
-      if(e.target.closest(".point")) return;
-
-      const rect = pointsLayer.getBoundingClientRect();
-      const x = clamp(((e.clientX - rect.left) / rect.width) * 100, 0, 100);
-      const y = clamp(((e.clientY - rect.top)  / rect.height)* 100, 0, 100);
-
-      const preset = presetSel.value;
-      const side = sideSel.value;
-
-      const code = "P" + (points.length + 1);
-      const suggested = autoLandmark(preset, y, side);
-      const promptText = (currentLang==="en")
-        ? `Landmark/description for ${code}:`
-        : `Descrizione repere per ${code}:`;
-
-      const text = prompt(promptText, suggested);
-      if(!text) return;
-
-      points.push({
-        id: (crypto?.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random()),
-        xPct:x, yPct:y,
-        code,
-        text:text.trim()
-      });
-
-      renderPoints();
-      regenerateLegend();
-    });
-
-    // ===== PDF =====
-    function escapeHtml(s){
-      return String(s ?? "")
-        .replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;")
-        .replaceAll('"',"&quot;").replaceAll("'","&#039;");
-    }
-
-    function buildLegendTableHTML(rows){
-      if(rows.length === 0) {
-        const msg = (currentLang==="en") ? "No points recorded." : "Nessun punto registrato.";
-        return `<div style="font-size:12px;color:#475569">${msg}</div>`;
-      }
-      const thP = (currentLang==="en") ? "Point" : "Punto";
-      const thD = (currentLang==="en") ? "Landmark / description" : "Repere anatomico / descrizione";
-      return `
-        <table class="legendTable">
-          <thead><tr><th>${thP}</th><th>${thD}</th></tr></thead>
-          <tbody>
-            ${rows.map(r=>`<tr><td style="width:80px"><b>${escapeHtml(r.code)}</b></td><td>${escapeHtml(r.text)}</td></tr>`).join("")}
-          </tbody>
-        </table>
-      `;
-    }
-
-    async function captureViewerScreenshot(){
-      // Nota: se il browser blocca lo screenshot per cross-origin, verrà gestito dal catch.
-      const canvas = await html2canvas(viewerWrap, {
-        backgroundColor: "#000000",
-        scale: 2,
-        useCORS: true,
-        allowTaint: true,
-        logging: false
-      });
-      return canvas.toDataURL("image/png");
-    }
-
-    $("btnPrintPdf").addEventListener("click", async ()=>{
-      const patient = $("patient").value?.trim() || "—";
-      const date = $("date").value || "—";
-
-      const presetKey = presetSel.value;
-      const presetLabel = (currentLang==="en" ? PRESET_LABELS_EN : PRESET_LABELS_IT)[presetKey] || presetKey;
-      const side = sideSel.value;
-
-      $("printMeta").textContent = (currentLang==="en")
-        ? `Date: ${date} • Equistasi application report`
-        : `Data: ${date} • Report applicazione Equistasi`;
-
-      $("printPatient").textContent = (currentLang==="en")
-        ? `Patient: ${patient}`
-        : `Paziente: ${patient}`;
-
-      $("printPreset").textContent = (currentLang==="en")
-        ? `Preset: ${presetLabel}\nSide: ${side}`
-        : `Preset: ${presetLabel}\nLato: ${side}`;
-
-      const rows = points.map(p=>({code:p.code, text:p.text}));
-      $("printLegendTable").innerHTML = buildLegendTableHTML(rows);
-
-      try{
-        await new Promise(r=>setTimeout(r, 200));
-        const shot = await captureViewerScreenshot();
-        $("printShot").src = shot;
-      }catch(err){
-        console.warn("Screenshot non disponibile:", err);
-        $("printShot").removeAttribute("src");
-        $("printShot").alt = (currentLang==="en")
-          ? "Viewer screenshot not available in this browser."
-          : "Screenshot viewer non disponibile in questo browser.";
-      }
-
-      window.print();
-    });
-
-    // Buttons / events
-    $("btnApplyPreset").addEventListener("click", ()=>applyPreset(true));
-    $("btnToggleLock").addEventListener("click", ()=>setLock(!isLocked));
-    $("btnClearPoints").addEventListener("click", ()=>{
-      const ok = confirm(currentLang==="en" ? "Delete all points?" : "Cancellare tutti i punti?");
-      if(!ok) return;
-      points = [];
-      renderPoints();
-      regenerateLegend();
-    });
-
-    $("btnIT").addEventListener("click", ()=>setLang("it"));
-    $("btnEN").addEventListener("click", ()=>setLang("en"));
-
-    // Apri 3D in nuova scheda (utile perché il browser può tradurre la pagina BioDigital)
-    $("btnOpen3D").addEventListener("click", ()=>{
-      const key = presetSel.value;
-      const url = withLang(PRESET_URLS[key] || PRESET_URLS.cervicale, currentLang);
-      window.open(url, "_blank", "noopener,noreferrer");
-    });
-
-    presetSel.addEventListener("change", ()=>{
-      applyPreset(true);
-      setLock(true);
-    });
-
-    // INIT
-    setLock(true);
-    setLang(currentLang);
-    regenerateLegend();
-
-    // ===== GOOGLE TRANSLATE INIT =====
-    // Nota: traduce la tua pagina (scheda), NON il contenuto dentro iframe (BioDigital).
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement(
-        {
-          pageLanguage: 'it',
-          includedLanguages: 'it,en',
-          layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-          autoDisplay: false
-        },
-        'google_translate_element'
-      );
-    }
-    window.googleTranslateElementInit = googleTranslateElementInit;
-  </script>
-
-  <!-- Google Translate loader -->
-  <script src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+<div class="app">
+
+<!-- ===== LEFT PANEL ===== -->
+<aside class="left">
+<h1>Equistasi – Scheda clinica</h1>
+
+<label>Paziente</label>
+<input id="patient">
+
+<label>Data</label>
+<input type="date" id="date">
+
+<label>Protocollo</label>
+<select id="protocol">
+<option>Cervicale</option>
+<option>Spalla</option>
+<option>Dorsale</option>
+<option>Lombare</option>
+<option>Anca</option>
+<option>Ginocchio</option>
+</select>
+
+<label>Legenda punti Equistasi</label>
+<textarea id="legend" placeholder="P1: C7 paravertebrale&#10;P2: margine mediale scapola"></textarea>
+
+<button onclick="printFull()">Stampa PDF completo</button>
+
+<div class="printImageBox">
+<h3>Modello 3D con punti Equistasi</h3>
+<img id="printImg">
+<h3>Legenda punti</h3>
+<pre id="legendPrint"></pre>
+</div>
+</aside>
+
+<!-- ===== VIEWER ===== -->
+<main class="right">
+<div class="viewerWrap" id="viewerWrap">
+
+<a class="logo" href="https://equistasi.com/contacts" target="_blank">
+<img src="./equistasi-logo.png">
+</a>
+
+<div class="pointsLayer" id="pointsLayer"></div>
+
+<iframe
+src="https://human.biodigital.com/widget/?be=2b5y&background.colors=1,1,1,1,1,1,1,1&ui-center=true&ui-zoom=true&ui-dissect=true&ui-help=true">
+</iframe>
+
+</div>
+</main>
+
+</div>
+
+<script>
+const pointsLayer=document.getElementById("pointsLayer");
+const legend=document.getElementById("legend");
+const printImg=document.getElementById("printImg");
+const legendPrint=document.getElementById("legendPrint");
+let points=[];
+
+function nextLabel(){return "P"+(points.length+1)}
+
+document.getElementById("viewerWrap").addEventListener("click",e=>{
+if(e.target.classList.contains("point"))return;
+const r=pointsLayer.getBoundingClientRect();
+const x=((e.clientX-r.left)/r.width)*100;
+const y=((e.clientY-r.top)/r.height)*100;
+const label=prompt("Nome punto",nextLabel());
+if(!label)return;
+points.push({x,y,label});
+render();
+});
+
+function render(){
+pointsLayer.innerHTML="";
+points.forEach((p,i)=>{
+const d=document.createElement("div");
+d.className="point";
+d.style.left=p.x+"%";
+d.style.top=p.y+"%";
+d.dataset.label=p.label;
+d.ondblclick=e=>{
+e.stopPropagation();
+points.splice(i,1);
+render();
+};
+pointsLayer.appendChild(d);
+});
+legend.value=points.map(p=>`${p.label}: descrizione`).join("\n");
+}
+
+async function printFull(){
+await html2canvas(document.getElementById("viewerWrap"),{backgroundColor:"#fff",scale:2})
+.then(c=>printImg.src=c.toDataURL());
+legendPrint.textContent=legend.value;
+setTimeout(()=>window.print(),300);
+}
+
+document.getElementById("date").value=new Date().toISOString().slice(0,10);
+</script>
 </body>
 </html>
+
