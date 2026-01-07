@@ -14,136 +14,81 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
     .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
     
-    /* Logo Styling */
-    .logo-container {
+    /* Logo posizionato sopra il Viewer 3D */
+    .logo-overlay {
       position: absolute;
-      top: 15px;
+      top: 60px; /* Sotto la topbar */
       right: 20px;
       z-index: 100;
-      pointer-events: none;
+      background: rgba(255, 255, 255, 0.9);
+      padding: 5px 10px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
     }
-    .logo-container img {
-      height: 40px; /* Regola l'altezza del logo */
-      filter: drop-shadow(0 0 10px rgba(0,0,0,0.5));
-    }
+    .logo-overlay img { height: 35px; display: block; }
 
     .left{
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       border-right:1px solid var(--border);
-      padding:16px;
-      overflow:auto;
+      padding:16px; overflow:auto;
     }
     h1{font-size:18px;margin:0 0 8px}
     .sub{color:var(--muted);font-size:12px;line-height:1.35;margin-bottom:12px}
     .card{
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.03);
-      border-radius:14px;
-      padding:12px;
-      margin:12px 0;
+      border:1px solid var(--border); background:rgba(255,255,255,.03);
+      border-radius:14px; padding:12px; margin:12px 0;
     }
     .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
     .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-    .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
     .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input, select, textarea{
-      width:100%;
-      padding:10px 12px;
-      border-radius:12px;
-      border:1px solid var(--border);
-      background:rgba(255,255,255,.04);
-      color:var(--txt);
-      outline:none;
-    }
-    textarea{min-height:90px;resize:vertical}
-    .btn{
-      border:1px solid rgba(77,163,255,.35);
-      background:rgba(77,163,255,.14);
-      color:var(--txt);
-      border-radius:12px;
-      padding:10px 12px;
-      cursor:pointer;
-      font-size:13px;
-      user-select:none;
-    }
-    .btn:hover{background:rgba(77,163,255,.20)}
-    .btn.secondary{border:1px solid var(--border);background:rgba(255,255,255,.06)}
-    .btn.lang-btn { font-weight: bold; color: var(--accent); border-color: var(--accent); }
     
-    .pill{
-      display:inline-flex;gap:8px;align-items:center;
-      padding:6px 10px;border-radius:999px;
-      border:1px solid var(--border);
-      background:rgba(0,0,0,.25);
-      color:var(--muted);
-      font-size:12px;
+    input, select, textarea{
+      width:100%; padding:10px 12px; border-radius:12px;
+      border:1px solid var(--border); background:rgba(255,255,255,.04);
+      color:var(--txt); outline:none;
     }
-    .small{font-size:12px;color:var(--muted);line-height:1.35}
+    
+    .btn{
+      border:1px solid rgba(77,163,255,.35); background:rgba(77,163,255,.14);
+      color:var(--txt); border-radius:12px; padding:10px 12px;
+      cursor:pointer; font-size:13px;
+    }
+    .btn.lang-btn { font-weight: bold; color: var(--accent); border-color: var(--accent); min-width: 50px;}
+
     .right{position:relative;background:#000}
     iframe{width:100%;height:100%;border:0;display:block;background:#000}
     
     .topbar{
       position:absolute;left:12px;top:12px;right:12px;
       display:flex;gap:10px;align-items:center;z-index:10;
-      pointer-events:none;
     }
-    .topbar .pill{pointer-events:auto}
-    .sessions{ max-height:240px; overflow:auto; border:1px solid var(--border); border-radius:14px; }
-    .sessionItem{ padding:10px 12px; cursor:pointer; border-bottom:1px solid var(--border); display:flex; gap:10px; align-items:flex-start; justify-content:space-between; }
-    .sessionItem:hover{background:rgba(255,255,255,.04)}
-    .badge{ font-size:11px; padding:4px 8px; border-radius:999px; border:1px solid var(--border); color:var(--muted); white-space:nowrap; }
-    .hr{height:1px;background:var(--border);margin:10px 0}
-    
-    @media print{
-      .right, .btn, .logo-container, .topbar {display:none !important}
-      .app{display:block}
-      .left{border:none;background:#fff; width:100%}
+    .pill{
+      padding:6px 10px; border-radius:999px; border:1px solid var(--border);
+      background:rgba(0,0,0,.6); color:var(--muted); font-size:12px;
     }
+
+    @media print{ .right, .btn, .logo-overlay, .topbar {display:none !important} .app{display:block} .left{width:100%} }
   </style>
 </head>
 <body>
 
-<div class="logo-container">
-    <img src="equistasi-logo.png" alt="Equistasi Logo">
-</div>
-
 <div class="app">
-
   <aside class="left">
     <div class="row" style="justify-content:space-between; margin-bottom:10px;">
         <h1 data-i18n="title">Equistasi – Scheda clinica</h1>
-        <button class="btn secondary lang-btn" id="langToggle">EN</button>
+        <button class="btn lang-btn" id="langToggle">EN</button>
     </div>
     
-    <div class="sub" data-i18n="subtitle">
-      Struttura rapida per: distretto → target muscoli → repere → posizionamento Equistasi → note manuali → obiettivo.
-    </div>
+    <div class="sub" data-i18n="subtitle">Struttura rapida per distretti e muscoli target.</div>
 
     <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div class="pill"><span data-i18n="autosave">Salvataggio</span> <b style="color:var(--ok)" data-i18n="auto">automatico</b></div>
-        <div class="pill" data-i18n="backup_label">Backup: Export/Import JSON</div>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="row" style="justify-content:space-between;align-items:flex-end">
-        <div style="flex:1">
-          <div class="label" data-i18n="label_patient">Paziente (ID o Nome)</div>
-          <input id="patient" placeholder="Es. Rossi Mario" />
-        </div>
-        <div style="width:140px">
-          <div class="label" data-i18n="label_date">Data</div>
-          <input id="date" type="date" />
-        </div>
-      </div>
-
+      <div class="label" data-i18n="label_patient">Paziente</div>
+      <input id="patient" placeholder="..." />
       <div class="grid2">
         <div>
-          <div class="label" data-i18n="label_protocol">Distretto / Protocollo</div>
+          <div class="label" data-i18n="label_protocol">Protocollo</div>
           <select id="protocol">
             <option value="cervicale" data-i18n="opt_cervical">Cervicale</option>
-            <option value="spalla" data-i18n="opt_shoulder">Spalla</option>
             <option value="lombare" data-i18n="opt_lumbar">Lombare</option>
           </select>
         </div>
@@ -152,138 +97,88 @@
           <select id="side">
             <option value="bilaterale" data-i18n="opt_bilateral">Bilaterale</option>
             <option value="destro" data-i18n="opt_right">Destro</option>
-            <option value="sinistro" data-i18n="opt_left">Sinistro</option>
           </select>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="label_muscles">Muscoli target (principali)</div>
-      <input id="muscles" placeholder="..." />
-
-      <div class="grid2">
-        <div>
-          <div class="label" data-i18n="label_innervation">Innervazione</div>
-          <input id="innervation" />
-        </div>
-        <div>
-          <div class="label" data-i18n="label_oi">Origine / Inserzione</div>
-          <input id="oi" />
-        </div>
-      </div>
-      
-      <div class="label" data-i18n="label_manual">Note manuali</div>
-      <textarea id="manual"></textarea>
-    </div>
-
-    <div class="card">
-      <div style="font-weight:700" data-i18n="label_placement_title">Posizionamento Equistasi</div>
-      <div class="grid3">
-        <div>
-          <div class="label" data-i18n="label_ndevices">N° dispositivi</div>
-          <select id="nDevices"><option>2</option><option>4</option></select>
-        </div>
-        <div>
-          <div class="label" data-i18n="label_minutes">Durata (min)</div>
-          <input id="minutes" type="number" value="20" />
-        </div>
-      </div>
-      <div class="label" data-i18n="label_placement_desc">Repere anatomici</div>
+      <div class="label" data-i18n="label_muscles">Muscoli target</div>
+      <textarea id="muscles"></textarea>
+      <div class="label" data-i18n="label_placement">Punti applicazione</div>
       <textarea id="placement"></textarea>
     </div>
 
-    <div class="card">
-      <div class="row">
-        <button class="btn" id="btnSaveSession" data-i18n="btn_save">Salva sessione</button>
-        <button class="btn secondary" id="btnExport">Export</button>
-        <button class="btn secondary" id="btnPrint" data-i18n="btn_print">Stampa</button>
-      </div>
-      <div style="height:10px"></div>
-      <div class="sessions" id="sessionList"></div>
+    <div class="row">
+      <button class="btn" id="btnPrint" data-i18n="btn_print">Stampa Scheda</button>
     </div>
-
   </aside>
 
   <main class="right">
     <div class="topbar">
-      <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital</div>
-      <div class="pill" data-i18n="viewer_help">Ruota: trascina • Zoom: rotella</div>
+      <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital Anatomy</div>
     </div>
-    <iframe src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-tools-display=primary&uaid=3Yfre" allow="fullscreen"></iframe>
+    
+    <div class="logo-overlay">
+        <img src="equistasi-logo.png" alt="Equistasi">
+    </div>
+
+    <iframe id="bioFrame" src="" allow="fullscreen"></iframe>
   </main>
 </div>
 
 <script>
-  // SISTEMA DI TRADUZIONE (i18n)
   const translations = {
     it: {
       title: "Equistasi – Scheda clinica",
-      subtitle: "Struttura rapida per: distretto → target muscoli → repere → posizionamento Equistasi → note manuali → obiettivo.",
-      autosave: "Salvataggio",
-      auto: "automatico",
-      backup_label: "Backup: Export/Import JSON",
+      subtitle: "Struttura rapida per distretti e muscoli target.",
       label_patient: "Paziente (ID o Nome)",
-      label_date: "Data",
       label_protocol: "Distretto / Protocollo",
       label_side: "Lato",
-      opt_cervical: "Cervicale / cefalea tensiva",
-      opt_shoulder: "Spalla (dolore / controllo)",
-      opt_lumbar: "Lombare (stabilità / dolore)",
+      opt_cervical: "Cervicale / Cefalea",
+      opt_lumbar: "Lombare / Stabilità",
       opt_bilateral: "Bilaterale",
       opt_right: "Destro",
-      opt_left: "Sinistro",
       label_muscles: "Muscoli target (principali)",
-      label_innervation: "Innervazione (radici/nervo)",
-      label_oi: "Origine / Inserzione (sintesi)",
-      label_manual: "Note manuali (solo manuale + Equistasi)",
-      label_placement_title: "Posizionamento Equistasi",
-      label_ndevices: "N° dispositivi",
-      label_minutes: "Durata (min)",
-      label_placement_desc: "Repere anatomici e punti di applicazione",
-      btn_save: "Salva sessione",
-      btn_print: "Stampa",
-      viewer_help: "Ruota: trascina • Zoom: rotella"
+      label_placement: "Repere e punti di applicazione",
+      btn_print: "Stampa Scheda"
     },
     en: {
       title: "Equistasi – Clinical Sheet",
-      subtitle: "Quick structure: area → target muscles → landmark → Equistasi positioning → manual notes → goal.",
-      autosave: "Save status:",
-      auto: "automatic",
-      backup_label: "Backup: JSON Export/Import",
+      subtitle: "Quick structure for districts and target muscles.",
       label_patient: "Patient (ID or Name)",
-      label_date: "Date",
-      label_protocol: "Area / Protocol",
+      label_protocol: "District / Protocol",
       label_side: "Side",
-      opt_cervical: "Cervical / tension headache",
-      opt_shoulder: "Shoulder (pain / scapular control)",
-      opt_lumbar: "Lumbar (stability / pain)",
+      opt_cervical: "Cervical / Headache",
+      opt_lumbar: "Lumbar / Stability",
       opt_bilateral: "Bilateral",
       opt_right: "Right",
-      opt_left: "Left",
       label_muscles: "Target Muscles (primary)",
-      label_innervation: "Innervation (roots/nerve)",
-      label_oi: "Origin / Insertion (summary)",
-      label_manual: "Manual notes (manual + Equistasi)",
-      label_placement_title: "Equistasi Positioning",
-      label_ndevices: "Devices Count",
-      label_minutes: "Duration (min)",
-      label_placement_desc: "Anatomical landmarks and application points",
-      btn_save: "Save Session",
-      btn_print: "Print",
-      viewer_help: "Rotate: drag • Zoom: scroll"
+      label_placement: "Landmarks and application points",
+      btn_print: "Print Sheet"
     }
   };
 
+  const BASE_BIO_URL = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre";
   let currentLang = localStorage.getItem("lang") || "it";
 
   function applyLanguage(lang) {
+    // 1. Traduzione interfaccia HTML
     document.querySelectorAll("[data-i18n]").forEach(el => {
       const key = el.getAttribute("data-i18n");
-      if (translations[lang][key]) {
-        el.innerText = translations[lang][key];
-      }
+      if (translations[lang][key]) el.innerText = translations[lang][key];
     });
+
+    // 2. Aggiornamento Iframe (Parte Bianca)
+    // Aggiungiamo il parametro lang all'URL di BioDigital
+    const bioFrame = document.getElementById("bioFrame");
+    const newUrl = `${BASE_BIO_URL}&lang=${lang}`;
+    
+    // Evitiamo il refresh se l'URL è già corretto
+    if (bioFrame.src !== newUrl) {
+        bioFrame.src = newUrl;
+    }
+
     document.getElementById("langToggle").innerText = lang === "it" ? "EN" : "IT";
     localStorage.setItem("lang", lang);
   }
@@ -293,25 +188,8 @@
     applyLanguage(currentLang);
   });
 
-  // --- LOGICA ESISTENTE (Semplificata per brevità) ---
-  const FORM_KEYS = ["patient","date","protocol","side","muscles","innervation","oi","manual","nDevices","minutes","placement"];
-  
-  function saveForm() {
-    const data = {};
-    FORM_KEYS.forEach(k => data[k] = document.getElementById(k)?.value || "");
-    localStorage.setItem("equistasi_form_v1", JSON.stringify(data));
-  }
-
-  function loadForm() {
-    const data = JSON.parse(localStorage.getItem("equistasi_form_v1") || "{}");
-    FORM_KEYS.forEach(k => { if(document.getElementById(k)) document.getElementById(k).value = data[k] || ""; });
-    if(!document.getElementById("date").value) document.getElementById("date").value = new Date().toISOString().slice(0,10);
-  }
-
   // Inizializzazione
   applyLanguage(currentLang);
-  loadForm();
-  FORM_KEYS.forEach(k => document.getElementById(k)?.addEventListener("input", saveForm));
   document.getElementById("btnPrint").addEventListener("click", () => window.print());
 </script>
 
