@@ -4,19 +4,6 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Equistasi – Clinica (Demo)</title>
-  
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'it',
-        includedLanguages: 'en,it',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        autoDisplay: false
-      }, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
   <style>
     :root{
       --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
@@ -40,10 +27,10 @@
     }
     .logo-container img { height: 40px; }
 
-    /* Copertura Logo BioDigital in basso a sinistra */
-    .anti-logo-overlay {
-      position: absolute; bottom: 0; left: 0; width: 180px; height: 50px;
-      background: #000; z-index: 99; pointer-events: none;
+    /* COPERTURA LOGO BIODIGITAL - Posizionato sopra il logo originale */
+    .hide-biodigital-logo {
+      position: absolute; bottom: 0; left: 0; width: 220px; height: 60px;
+      background: #000; z-index: 999; pointer-events: none;
     }
 
     h1{font-size:18px;margin:0 0 8px}
@@ -51,18 +38,19 @@
     .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
     input, select, textarea{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; }
     .btn{ border:1px solid rgba(77,163,255,.35); background:rgba(77,163,255,.14); color:var(--txt); border-radius:12px; padding:10px 12px; cursor:pointer; }
+    .btn:hover{ background:rgba(77,163,255,.25); }
 
     .right{position:relative;background:#000}
     iframe{width:100%;height:100%;border:0;display:block;background:#000}
     
-    #google_translate_element { display: none; }
-    .goog-te-banner-frame.skiptranslate { display: none !important; }
-    body { top: 0px !important; }
+    @media print{
+      .right, .btn, .logo-container, .hide-biodigital-logo {display:none !important}
+      .app{display:block}
+      .left{width:100%; background:#fff; color:#000}
+    }
   </style>
 </head>
 <body>
-
-<div id="google_translate_element"></div>
 
 <div class="logo-container">
     <img src="equistasi-logo.png" alt="Equistasi Logo">
@@ -70,47 +58,50 @@
 
 <div class="app">
   <aside class="left">
-    <div class="row" style="display:flex; justify-content:space-between; align-items:center;">
-        <h1>Equistasi – Scheda clinica</h1>
-        <button class="btn" id="btnTranslate" style="color:var(--accent)">TRADUCI</button>
+    <div class="row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+        <h1 data-i18n="title">Equistasi – Scheda clinica</h1>
+        <div style="display:flex; gap:5px;">
+          <button class="btn" onclick="setLanguage('it')" id="btn-it">IT</button>
+          <button class="btn" onclick="setLanguage('en')" id="btn-en">EN</button>
+        </div>
     </div>
 
     <div class="card">
-      <div class="label">Paziente</div>
-      <input id="patient" placeholder="Nome o ID" />
+      <div class="label" data-i18n="lbl_patient">Paziente (ID o Nome)</div>
+      <input id="patient" placeholder="..." />
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
         <div>
-          <div class="label">Protocollo</div>
+          <div class="label" data-i18n="lbl_protocol">Distretto / Protocollo</div>
           <select id="protocol">
-            <option>Cervicale</option>
-            <option>Lombare</option>
-            <option>Spalla</option>
+            <option data-i18n="opt_cerv">Cervicale</option>
+            <option data-i18n="opt_lomb">Lombare</option>
+            <option data-i18n="opt_shoulder">Spalla</option>
           </select>
         </div>
         <div>
-          <div class="label">Data</div>
+          <div class="label" data-i18n="lbl_date">Data</div>
           <input type="date" id="date" />
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label">Muscoli Target</div>
-      <input id="muscles" placeholder="Es. Trapezio, SCM..." />
-      <div class="label">Trigger Point / Note Manuali</div>
-      <textarea id="triggers" style="min-height:80px"></textarea>
+      <div class="label" data-i18n="lbl_muscles">Muscoli Target (principali)</div>
+      <input id="muscles" />
+      <div class="label" data-i18n="lbl_trigger">Trigger Point / Note Manuali</div>
+      <textarea id="triggers" style="min-height:100px"></textarea>
     </div>
 
     <div class="card">
-      <div class="label">Posizionamento Equistasi</div>
-      <textarea id="placement" placeholder="Descrivi i punti di repere..."></textarea>
+      <div class="label" data-i18n="lbl_pos">Posizionamento Equistasi / Repere</div>
+      <textarea id="placement" style="min-height:100px"></textarea>
     </div>
 
-    <button class="btn" onclick="window.print()" style="width:100%">Stampa Scheda</button>
+    <button class="btn" onclick="window.print()" style="width:100%; margin-top:10px;" data-i18n="btn_print">Stampa Scheda</button>
   </aside>
 
   <main class="right">
-    <div class="anti-logo-overlay"></div>
+    <div class="hide-biodigital-logo"></div>
     
     <iframe id="bioFrame" 
       src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre" 
@@ -120,17 +111,56 @@
 </div>
 
 <script>
-  // Funzione per attivare la traduzione di Google
-  document.getElementById('btnTranslate').addEventListener('click', function() {
-    var select = document.querySelector('select.goog-te-combo');
-    if (select) {
-      select.value = (select.value === 'en') ? 'it' : 'en';
-      select.dispatchEvent(new Event('change'));
+  // Database traduzioni per la scheda clinica
+  const langData = {
+    it: {
+      title: "Equistasi – Scheda clinica",
+      lbl_patient: "Paziente (ID o Nome)",
+      lbl_protocol: "Distretto / Protocollo",
+      opt_cerv: "Cervicale",
+      opt_lomb: "Lombare",
+      opt_shoulder: "Spalla",
+      lbl_date: "Data",
+      lbl_muscles: "Muscoli Target (principali)",
+      lbl_trigger: "Trigger Point / Note Manuali",
+      lbl_pos: "Posizionamento Equistasi / Repere",
+      btn_print: "Stampa Scheda"
+    },
+    en: {
+      title: "Equistasi – Clinical Sheet",
+      lbl_patient: "Patient (ID or Name)",
+      lbl_protocol: "Area / Protocol",
+      opt_cerv: "Cervical",
+      opt_lomb: "Lumbar",
+      opt_shoulder: "Shoulder",
+      lbl_date: "Date",
+      lbl_muscles: "Target Muscles (primary)",
+      lbl_trigger: "Trigger Points / Manual Notes",
+      lbl_pos: "Equistasi Positioning / Landmarks",
+      btn_print: "Print Sheet"
     }
-  });
+  };
 
-  // Imposta data odierna
+  function setLanguage(lang) {
+    // Traduci i testi della scheda
+    document.querySelectorAll('[data-i18n]').forEach(el => {
+      const key = el.getAttribute('data-i18n');
+      el.innerText = langData[lang][key];
+    });
+
+    // Cambia lingua all'iframe di BioDigital
+    const frame = document.getElementById('bioFrame');
+    const baseUrl = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre";
+    frame.src = baseUrl + "&lang=" + lang;
+
+    // Feedback visivo bottoni
+    document.getElementById('btn-it').style.borderColor = (lang === 'it') ? 'var(--accent)' : 'rgba(77,163,255,.35)';
+    document.getElementById('btn-en').style.borderColor = (lang === 'en') ? 'var(--accent)' : 'rgba(77,163,255,.35)';
+  }
+
+  // Inizializzazione
   document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+  setLanguage('it');
 </script>
 </body>
 </html>
