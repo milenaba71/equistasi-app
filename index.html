@@ -4,6 +4,19 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Equistasi – Clinica (Demo)</title>
+  
+  <script type="text/javascript">
+    function googleTranslateElementInit() {
+      new google.translate.TranslateElement({
+        pageLanguage: 'it',
+        includedLanguages: 'en,it',
+        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
+        autoDisplay: false
+      }, 'google_translate_element');
+    }
+  </script>
+  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
   <style>
     :root{
       --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
@@ -14,184 +27,110 @@
     html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
     .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
     
-    /* Logo posizionato sopra il Viewer 3D */
-    .logo-overlay {
-      position: absolute;
-      top: 60px; /* Sotto la topbar */
-      right: 20px;
-      z-index: 100;
-      background: rgba(255, 255, 255, 0.9);
-      padding: 5px 10px;
-      border-radius: 8px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-    }
-    .logo-overlay img { height: 35px; display: block; }
-
     .left{
       background:linear-gradient(180deg,var(--panel),var(--panel2));
-      border-right:1px solid var(--border);
-      padding:16px; overflow:auto;
+      border-right:1px solid var(--border); padding:16px; overflow:auto;
     }
+    
+    /* Logo Equistasi in alto a destra */
+    .logo-container {
+      position: absolute; top: 15px; right: 20px; z-index: 100;
+      background: rgba(255,255,255,0.95); padding: 8px 15px; border-radius: 8px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+    }
+    .logo-container img { height: 40px; }
+
+    /* Copertura Logo BioDigital in basso a sinistra */
+    .anti-logo-overlay {
+      position: absolute; bottom: 0; left: 0; width: 180px; height: 50px;
+      background: #000; z-index: 99; pointer-events: none;
+    }
+
     h1{font-size:18px;margin:0 0 8px}
-    .sub{color:var(--muted);font-size:12px;line-height:1.35;margin-bottom:12px}
-    .card{
-      border:1px solid var(--border); background:rgba(255,255,255,.03);
-      border-radius:14px; padding:12px; margin:12px 0;
-    }
-    .row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-    .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+    .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:14px; padding:12px; margin:12px 0; }
     .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
-    
-    input, select, textarea{
-      width:100%; padding:10px 12px; border-radius:12px;
-      border:1px solid var(--border); background:rgba(255,255,255,.04);
-      color:var(--txt); outline:none;
-    }
-    
-    .btn{
-      border:1px solid rgba(77,163,255,.35); background:rgba(77,163,255,.14);
-      color:var(--txt); border-radius:12px; padding:10px 12px;
-      cursor:pointer; font-size:13px;
-    }
-    .btn.lang-btn { font-weight: bold; color: var(--accent); border-color: var(--accent); min-width: 50px;}
+    input, select, textarea{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; }
+    .btn{ border:1px solid rgba(77,163,255,.35); background:rgba(77,163,255,.14); color:var(--txt); border-radius:12px; padding:10px 12px; cursor:pointer; }
 
     .right{position:relative;background:#000}
     iframe{width:100%;height:100%;border:0;display:block;background:#000}
     
-    .topbar{
-      position:absolute;left:12px;top:12px;right:12px;
-      display:flex;gap:10px;align-items:center;z-index:10;
-    }
-    .pill{
-      padding:6px 10px; border-radius:999px; border:1px solid var(--border);
-      background:rgba(0,0,0,.6); color:var(--muted); font-size:12px;
-    }
-
-    @media print{ .right, .btn, .logo-overlay, .topbar {display:none !important} .app{display:block} .left{width:100%} }
+    #google_translate_element { display: none; }
+    .goog-te-banner-frame.skiptranslate { display: none !important; }
+    body { top: 0px !important; }
   </style>
 </head>
 <body>
 
+<div id="google_translate_element"></div>
+
+<div class="logo-container">
+    <img src="equistasi-logo.png" alt="Equistasi Logo">
+</div>
+
 <div class="app">
   <aside class="left">
-    <div class="row" style="justify-content:space-between; margin-bottom:10px;">
-        <h1 data-i18n="title">Equistasi – Scheda clinica</h1>
-        <button class="btn lang-btn" id="langToggle">EN</button>
+    <div class="row" style="display:flex; justify-content:space-between; align-items:center;">
+        <h1>Equistasi – Scheda clinica</h1>
+        <button class="btn" id="btnTranslate" style="color:var(--accent)">TRADUCI</button>
     </div>
-    
-    <div class="sub" data-i18n="subtitle">Struttura rapida per distretti e muscoli target.</div>
 
     <div class="card">
-      <div class="label" data-i18n="label_patient">Paziente</div>
-      <input id="patient" placeholder="..." />
-      <div class="grid2">
+      <div class="label">Paziente</div>
+      <input id="patient" placeholder="Nome o ID" />
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
         <div>
-          <div class="label" data-i18n="label_protocol">Protocollo</div>
+          <div class="label">Protocollo</div>
           <select id="protocol">
-            <option value="cervicale" data-i18n="opt_cervical">Cervicale</option>
-            <option value="lombare" data-i18n="opt_lumbar">Lombare</option>
+            <option>Cervicale</option>
+            <option>Lombare</option>
+            <option>Spalla</option>
           </select>
         </div>
         <div>
-          <div class="label" data-i18n="label_side">Lato</div>
-          <select id="side">
-            <option value="bilaterale" data-i18n="opt_bilateral">Bilaterale</option>
-            <option value="destro" data-i18n="opt_right">Destro</option>
-          </select>
+          <div class="label">Data</div>
+          <input type="date" id="date" />
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="label_muscles">Muscoli target</div>
-      <textarea id="muscles"></textarea>
-      <div class="label" data-i18n="label_placement">Punti applicazione</div>
-      <textarea id="placement"></textarea>
+      <div class="label">Muscoli Target</div>
+      <input id="muscles" placeholder="Es. Trapezio, SCM..." />
+      <div class="label">Trigger Point / Note Manuali</div>
+      <textarea id="triggers" style="min-height:80px"></textarea>
     </div>
 
-    <div class="row">
-      <button class="btn" id="btnPrint" data-i18n="btn_print">Stampa Scheda</button>
+    <div class="card">
+      <div class="label">Posizionamento Equistasi</div>
+      <textarea id="placement" placeholder="Descrivi i punti di repere..."></textarea>
     </div>
+
+    <button class="btn" onclick="window.print()" style="width:100%">Stampa Scheda</button>
   </aside>
 
   <main class="right">
-    <div class="topbar">
-      <div class="pill"><b style="color:var(--txt)">3D</b> BioDigital Anatomy</div>
-    </div>
+    <div class="anti-logo-overlay"></div>
     
-    <div class="logo-overlay">
-        <img src="equistasi-logo.png" alt="Equistasi">
-    </div>
-
-    <iframe id="bioFrame" src="" allow="fullscreen"></iframe>
+    <iframe id="bioFrame" 
+      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre" 
+      allow="fullscreen">
+    </iframe>
   </main>
 </div>
 
 <script>
-  const translations = {
-    it: {
-      title: "Equistasi – Scheda clinica",
-      subtitle: "Struttura rapida per distretti e muscoli target.",
-      label_patient: "Paziente (ID o Nome)",
-      label_protocol: "Distretto / Protocollo",
-      label_side: "Lato",
-      opt_cervical: "Cervicale / Cefalea",
-      opt_lumbar: "Lombare / Stabilità",
-      opt_bilateral: "Bilaterale",
-      opt_right: "Destro",
-      label_muscles: "Muscoli target (principali)",
-      label_placement: "Repere e punti di applicazione",
-      btn_print: "Stampa Scheda"
-    },
-    en: {
-      title: "Equistasi – Clinical Sheet",
-      subtitle: "Quick structure for districts and target muscles.",
-      label_patient: "Patient (ID or Name)",
-      label_protocol: "District / Protocol",
-      label_side: "Side",
-      opt_cervical: "Cervical / Headache",
-      opt_lumbar: "Lumbar / Stability",
-      opt_bilateral: "Bilateral",
-      opt_right: "Right",
-      label_muscles: "Target Muscles (primary)",
-      label_placement: "Landmarks and application points",
-      btn_print: "Print Sheet"
+  // Funzione per attivare la traduzione di Google
+  document.getElementById('btnTranslate').addEventListener('click', function() {
+    var select = document.querySelector('select.goog-te-combo');
+    if (select) {
+      select.value = (select.value === 'en') ? 'it' : 'en';
+      select.dispatchEvent(new Event('change'));
     }
-  };
-
-  const BASE_BIO_URL = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre";
-  let currentLang = localStorage.getItem("lang") || "it";
-
-  function applyLanguage(lang) {
-    // 1. Traduzione interfaccia HTML
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-      const key = el.getAttribute("data-i18n");
-      if (translations[lang][key]) el.innerText = translations[lang][key];
-    });
-
-    // 2. Aggiornamento Iframe (Parte Bianca)
-    // Aggiungiamo il parametro lang all'URL di BioDigital
-    const bioFrame = document.getElementById("bioFrame");
-    const newUrl = `${BASE_BIO_URL}&lang=${lang}`;
-    
-    // Evitiamo il refresh se l'URL è già corretto
-    if (bioFrame.src !== newUrl) {
-        bioFrame.src = newUrl;
-    }
-
-    document.getElementById("langToggle").innerText = lang === "it" ? "EN" : "IT";
-    localStorage.setItem("lang", lang);
-  }
-
-  document.getElementById("langToggle").addEventListener("click", () => {
-    currentLang = currentLang === "it" ? "en" : "it";
-    applyLanguage(currentLang);
   });
 
-  // Inizializzazione
-  applyLanguage(currentLang);
-  document.getElementById("btnPrint").addEventListener("click", () => window.print());
+  // Imposta data odierna
+  document.getElementById('date').value = new Date().toISOString().substring(0, 10);
 </script>
-
 </body>
 </html>
