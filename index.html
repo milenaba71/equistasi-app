@@ -8,159 +8,124 @@
     :root{
       --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
       --txt:#e7eef8; --muted:#a8b3c3; --border:rgba(255,255,255,.08);
-      --accent:#4da3ff; --ok:#3ddc97; --warn:#ffcc66; --danger:#ff5d5d;
+      --accent:#4da3ff;
     }
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
     .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
     
+    /* Pannello Sinistro */
     .left{
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       border-right:1px solid var(--border); padding:16px; overflow:auto;
     }
     
-    /* Logo Equistasi in alto a destra */
+    /* Logo Equistasi in alto a destra sopra il 3D */
     .logo-container {
-      position: absolute; top: 15px; right: 20px; z-index: 100;
-      background: rgba(255,255,255,0.95); padding: 8px 15px; border-radius: 8px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.4);
+      position: absolute; top: 15px; right: 20px; z-index: 1000;
+      background: white; padding: 5px 10px; border-radius: 6px;
     }
-    .logo-container img { height: 40px; }
+    .logo-container img { height: 35px; display: block; }
 
-    /* COPERTURA LOGO BIODIGITAL - Posizionato sopra il logo originale */
-    .hide-biodigital-logo {
-      position: absolute; bottom: 0; left: 0; width: 220px; height: 60px;
+    /* COPERTURA LOGO BIODIGITAL (In basso a sinistra dell'area 3D) */
+    .hide-logo-overlay {
+      position: absolute; bottom: 0; left: 0; width: 200px; height: 50px;
       background: #000; z-index: 999; pointer-events: none;
     }
 
     h1{font-size:18px;margin:0 0 8px}
-    .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:14px; padding:12px; margin:12px 0; }
-    .label{font-size:12px;color:var(--muted);margin:10px 0 6px}
-    input, select, textarea{ width:100%; padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; }
-    .btn{ border:1px solid rgba(77,163,255,.35); background:rgba(77,163,255,.14); color:var(--txt); border-radius:12px; padding:10px 12px; cursor:pointer; }
-    .btn:hover{ background:rgba(77,163,255,.25); }
+    .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:12px; padding:12px; margin:12px 0; }
+    .label{font-size:12px;color:var(--muted);margin:8px 0 4px}
+    input, select, textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; }
+    .btn{ border:1px solid var(--accent); background:rgba(77,163,255,.1); color:var(--txt); border-radius:8px; padding:10px; cursor:pointer; width:100%; }
 
+    /* Area 3D */
     .right{position:relative;background:#000}
-    iframe{width:100%;height:100%;border:0;display:block;background:#000}
+    iframe{width:100%;height:100%;border:0;display:block}
     
-    @media print{
-      .right, .btn, .logo-container, .hide-biodigital-logo {display:none !important}
-      .app{display:block}
-      .left{width:100%; background:#fff; color:#000}
-    }
+    @media print{ .right, .btn, .logo-container, .hide-logo-overlay {display:none !important} .app{display:block} .left{width:100%} }
   </style>
 </head>
 <body>
 
-<div class="logo-container">
-    <img src="equistasi-logo.png" alt="Equistasi Logo">
-</div>
-
 <div class="app">
   <aside class="left">
-    <div class="row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+    <div style="display:flex; justify-content:space-between; align-items:center;">
         <h1 data-i18n="title">Equistasi – Scheda clinica</h1>
-        <div style="display:flex; gap:5px;">
-          <button class="btn" onclick="setLanguage('it')" id="btn-it">IT</button>
-          <button class="btn" onclick="setLanguage('en')" id="btn-en">EN</button>
-        </div>
+        <button class="btn" style="width:auto; padding:5px 15px" onclick="toggleLang()" id="langBtn">EN</button>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="lbl_patient">Paziente (ID o Nome)</div>
-      <input id="patient" placeholder="..." />
+      <div class="label" data-i18n="paziente">Paziente (ID o Nome)</div>
+      <input id="patient" placeholder="Es: Milena Baroni" />
       <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
         <div>
-          <div class="label" data-i18n="lbl_protocol">Distretto / Protocollo</div>
+          <div class="label" data-i18n="protocollo">Protocollo</div>
           <select id="protocol">
-            <option data-i18n="opt_cerv">Cervicale</option>
-            <option data-i18n="opt_lomb">Lombare</option>
-            <option data-i18n="opt_shoulder">Spalla</option>
+            <option data-i18n="cerv">Cervicale</option>
+            <option data-i18n="lomb">Lombare</option>
           </select>
         </div>
         <div>
-          <div class="label" data-i18n="lbl_date">Data</div>
+          <div class="label" data-i18n="data">Data</div>
           <input type="date" id="date" />
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="lbl_muscles">Muscoli Target (principali)</div>
-      <input id="muscles" />
-      <div class="label" data-i18n="lbl_trigger">Trigger Point / Note Manuali</div>
-      <textarea id="triggers" style="min-height:100px"></textarea>
+      <div class="label" data-i18n="muscoli">Muscoli Target (principali)</div>
+      <input id="muscles" placeholder="Es. Trapezio..." />
+      <div class="label" data-i18n="note">Trigger Point / Note Manuali</div>
+      <textarea id="notes" style="min-height:100px"></textarea>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="lbl_pos">Posizionamento Equistasi / Repere</div>
-      <textarea id="placement" style="min-height:100px"></textarea>
+      <div class="label" data-i18n="posiz">Posizionamento Equistasi</div>
+      <textarea id="pos" style="min-height:80px"></textarea>
     </div>
 
-    <button class="btn" onclick="window.print()" style="width:100%; margin-top:10px;" data-i18n="btn_print">Stampa Scheda</button>
+    <button class="btn" onclick="window.print()" data-i18n="stampa">Stampa Scheda</button>
   </aside>
 
   <main class="right">
-    <div class="hide-biodigital-logo"></div>
+    <div class="logo-container">
+        <img src="equistasi-logo.png" alt="Equistasi">
+    </div>
     
+    <div class="hide-logo-overlay"></div>
+
     <iframe id="bioFrame" 
-      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre" 
+      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre" 
       allow="fullscreen">
     </iframe>
   </main>
 </div>
 
 <script>
-  // Database traduzioni per la scheda clinica
-  const langData = {
-    it: {
-      title: "Equistasi – Scheda clinica",
-      lbl_patient: "Paziente (ID o Nome)",
-      lbl_protocol: "Distretto / Protocollo",
-      opt_cerv: "Cervicale",
-      opt_lomb: "Lombare",
-      opt_shoulder: "Spalla",
-      lbl_date: "Data",
-      lbl_muscles: "Muscoli Target (principali)",
-      lbl_trigger: "Trigger Point / Note Manuali",
-      lbl_pos: "Posizionamento Equistasi / Repere",
-      btn_print: "Stampa Scheda"
-    },
-    en: {
-      title: "Equistasi – Clinical Sheet",
-      lbl_patient: "Patient (ID or Name)",
-      lbl_protocol: "Area / Protocol",
-      opt_cerv: "Cervical",
-      opt_lomb: "Lumbar",
-      opt_shoulder: "Shoulder",
-      lbl_date: "Date",
-      lbl_muscles: "Target Muscles (primary)",
-      lbl_trigger: "Trigger Points / Manual Notes",
-      lbl_pos: "Equistasi Positioning / Landmarks",
-      btn_print: "Print Sheet"
-    }
+  // Gestione Lingue
+  const trans = {
+    it: { title:"Equistasi – Scheda clinica", paziente:"Paziente", protocollo:"Protocollo", cerv:"Cervicale", lomb:"Lombare", data:"Data", muscoli:"Muscoli Target", note:"Trigger Point / Note Manuali", posiz:"Posizionamento Equistasi", stampa:"Stampa Scheda" },
+    en: { title:"Equistasi – Clinical Sheet", paziente:"Patient", protocollo:"Protocol", cerv:"Cervical", lomb:"Lumbar", data:"Date", muscoli:"Target Muscles", note:"Trigger Points / Manual Notes", posiz:"Equistasi Positioning", stampa:"Print Sheet" }
   };
 
-  function setLanguage(lang) {
-    // Traduci i testi della scheda
-    document.querySelectorAll('[data-i18n]').forEach(el => {
-      const key = el.getAttribute('data-i18n');
-      el.innerText = langData[lang][key];
+  let cur = "it";
+  function toggleLang() {
+    cur = cur === "it" ? "en" : "it";
+    document.getElementById("langBtn").innerText = cur === "it" ? "EN" : "IT";
+    document.querySelectorAll("[data-i18n]").forEach(el => {
+      el.innerText = trans[cur][el.getAttribute("data-i18n")];
     });
-
-    // Cambia lingua all'iframe di BioDigital
-    const frame = document.getElementById('bioFrame');
-    const baseUrl = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&ui-info=true&ui-dissect=true&ui-tools-display=primary&uaid=3Yfre";
-    frame.src = baseUrl + "&lang=" + lang;
-
-    // Feedback visivo bottoni
-    document.getElementById('btn-it').style.borderColor = (lang === 'it') ? 'var(--accent)' : 'rgba(77,163,255,.35)';
-    document.getElementById('btn-en').style.borderColor = (lang === 'en') ? 'var(--accent)' : 'rgba(77,163,255,.35)';
+    
+    // Ricarica l'iframe con la lingua selezionata per forzare la traduzione di BioDigital
+    const frame = document.getElementById("bioFrame");
+    const baseUrl = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
+    frame.src = baseUrl + "&lang=" + cur;
   }
 
-  // Inizializzazione
+  // Imposta data odierna
   document.getElementById('date').value = new Date().toISOString().substring(0, 10);
-  setLanguage('it');
 </script>
+
 </body>
 </html>
