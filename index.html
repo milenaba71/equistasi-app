@@ -13,13 +13,13 @@
     html,body{height:100%; margin:0; background:var(--bg); color:var(--txt); overflow:hidden}
     .app{display:grid; grid-template-columns:420px 1fr; height:100vh}
     
-    .left{ background:linear-gradient(180deg,var(--panel),var(--panel2)); border-right:1px solid var(--border); padding:16px; overflow:auto; }
+    .left{ background:linear-gradient(180deg,var(--panel),var(--panel2)); border-right:1px solid var(--border); padding:16px; overflow:auto; position: relative;}
     
-    /* Logo Equistasi in alto a destra sopra il 3D */
+    /* Logo Equistasi Overlay */
     .logo-overlay { position: absolute; top: 15px; right: 20px; z-index: 1000; background: white; padding: 5px 12px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     .logo-overlay img { height: 35px; display: block; }
 
-    /* Copertura logo BioDigital in basso a sinistra */
+    /* Copertura logo BioDigital */
     .cover-biodigital { position: absolute; bottom: 0; left: 0; width: 240px; height: 65px; background: #000; z-index: 999; pointer-events: none; }
 
     .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:12px; padding:12px; margin-bottom:10px; }
@@ -27,17 +27,29 @@
     input, select, textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; font-size:13px;}
     .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
     
+    /* Pulsante Lingua Personalizzato */
+    .lang-toggle {
+      background: rgba(77,163,255,0.15); border: 1px solid var(--accent); color: white;
+      padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: bold;
+      transition: 0.3s; margin-bottom: 10px;
+    }
+    .lang-toggle:hover { background: var(--accent); }
+
     .right{position:relative; background:#000}
     iframe{width:100%; height:100%; border:0; display:block;}
 
-    /* Stile per la stampa */
+    /* CONFIGURAZIONE STAMPA PDF (Include 3D) */
     @media print {
-      .right, .logo-overlay, .cover-biodigital { display: none !important; }
-      .app { display: block; }
-      .left { width: 100%; background: white; color: black; }
-      .card { border: 1px solid #ccc; background: none; }
-      .label { color: #666; }
-      input, select, textarea { color: black; border: 1px solid #ccc; }
+      body, html { overflow: visible; height: auto; background: white !important; color: black !important; }
+      .app { display: flex; flex-direction: column; height: auto; }
+      .left { width: 100%; background: white !important; color: black !important; border: none; overflow: visible; }
+      .right { width: 100%; height: 500px; position: relative; page-break-before: always; }
+      iframe { height: 100%; width: 100%; border: 1px solid #eee; }
+      .cover-biodigital, .lang-toggle, button[onclick="window.print()"] { display: none !important; }
+      .card { border: 1px solid #ddd !important; background: none !important; margin-bottom: 20px; }
+      .label { color: #555 !important; }
+      input, select, textarea { border: 1px solid #ccc !important; color: black !important; background: none !important; }
+      .logo-overlay { position: static; margin-bottom: 20px; display: inline-block; border: 1px solid #eee; }
     }
   </style>
 </head>
@@ -45,98 +57,174 @@
 
 <div class="app">
   <aside class="left">
-    <h1 style="font-size:18px; margin:0">Equistasi – Scheda clinica</h1>
-    <p style="font-size:11px; color:var(--muted)">Struttura rapida per distretti e muscoli target.</p>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+      <h1 id="main-title" style="font-size:18px; margin:0">Equistasi – Scheda clinica</h1>
+      <button class="lang-toggle" onclick="toggleLanguage()" id="lang-btn">EN</button>
+    </div>
+    
+    <p id="sub-title" style="font-size:11px; color:var(--muted)">Struttura rapida per distretti e muscoli target.</p>
 
     <div class="card">
       <div class="grid2">
         <div>
-          <div class="label">Paziente (ID o Nome)</div>
+          <div class="label" id="lbl-patient">Paziente (ID o Nome)</div>
           <input id="patient" value="milena baroni" />
         </div>
         <div>
-          <div class="label">Data</div>
-          <input type="date" id="date" value="2026-01-04" />
+          <div class="label" id="lbl-date">Data</div>
+          <input type="date" id="date" value="2026-01-07" />
         </div>
       </div>
       
       <div class="grid2">
         <div>
-          <div class="label">Distretto / Protocollo</div>
-          <select>
-            <option>Cervicale / Cefalea</option>
-            <option selected>Lombare (stabilità / dolore)</option>
-            <option>Arto Superiore / Spalla</option>
-            <option>Arto Inferiore / Anca</option>
+          <div class="label" id="lbl-protocol">Distretto / Protocollo</div>
+          <select id="protocol-select">
+            <option id="opt-cerv">Cervicale / Cefalea</option>
+            <option selected id="opt-lumb">Lombare (stabilità / dolore)</option>
+            <option id="opt-upper">Arto Superiore / Spalla</option>
+            <option id="opt-lower">Arto Inferiore / Anca</option>
           </select>
         </div>
         <div>
-          <div class="label">Lato</div>
+          <div class="label" id="lbl-side">Lato</div>
           <select>
-            <option>Bilaterale</option>
-            <option selected>Sinistro</option>
-            <option>Destro</option>
+            <option id="side-bi">Bilaterale</option>
+            <option selected id="side-left">Sinistro</option>
+            <option id="side-right">Destro</option>
           </select>
-        </div>
-      </div>
-
-      <div class="grid2">
-        <div>
-          <div class="label">Obiettivo clinico</div>
-          <select><option selected>Riduzione dolore / mobilità</option></select>
-        </div>
-        <div>
-          <div class="label">Esito (oggi)</div>
-          <select><option selected>Stabile</option></select>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label">Muscoli target (principali)</div>
+      <div class="label" id="lbl-muscles">Muscoli target (principali)</div>
       <input value="left trapezius" />
       
       <div class="grid2">
         <div>
-          <div class="label">Innervazione</div>
+          <div class="label" id="lbl-innerv">Innervazione</div>
           <input value="c2" />
         </div>
         <div>
-          <div class="label">Origine / Inserzione</div>
+          <div class="label" id="lbl-oi">Origine / Inserzione</div>
           <input placeholder="Es: nuca -> clavicola" />
         </div>
       </div>
-
-      <div class="label">Trigger point / Note Manuali</div>
-      <textarea style="min-height:60px"></textarea>
     </div>
 
     <div class="card">
-      <div style="font-weight:bold; font-size:13px; margin-bottom:10px">Equistasi Positioning</div>
+      <div id="lbl-pos-title" style="font-weight:bold; font-size:13px; margin-bottom:10px">Equistasi Positioning</div>
       <div class="grid2">
         <div>
-          <div class="label">Dispositivi (n°)</div>
+          <div class="label" id="lbl-dev">Dispositivi (n°)</div>
           <select><option>1</option><option selected>2</option><option>3</option></select>
         </div>
         <div>
-          <div class="label">Durata (min)</div>
+          <div class="label" id="lbl-dur">Durata (min)</div>
           <input type="number" value="2" />
         </div>
       </div>
-      <div class="label">Punti tipo agopuntura / repere</div>
+      <div class="label" id="lbl-points">Punti tipo agopuntura / repere</div>
       <textarea style="min-height:50px"></textarea>
     </div>
 
-    <button style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--accent); background:rgba(77,163,255,0.1); color:white; font-weight:bold; cursor:pointer" onclick="window.print()">STAMPA SCHEDA</button>
+    <button id="btn-print" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--accent); background:rgba(77,163,255,0.1); color:white; font-weight:bold; cursor:pointer" onclick="window.print()">STAMPA SCHEDA (PDF)</button>
   </aside>
 
   <main class="right">
     <div class="logo-overlay"><img src="equistasi-logo.png" alt="Equistasi Logo"></div>
     <div class="cover-biodigital"></div>
-
-    <iframe src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre&lang=it"></iframe>
+    <iframe id="bioFrame" src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre&lang=it"></iframe>
   </main>
 </div>
+
+<script>
+  let currentLang = 'it';
+
+  const texts = {
+    en: {
+      btn: "IT",
+      title: "Equistasi – Clinical Sheet",
+      sub: "Quick structure for districts and target muscles.",
+      patient: "Patient (ID or Name)",
+      date: "Date",
+      protocol: "Area / Protocol",
+      side: "Side",
+      muscles: "Target muscles (primary)",
+      innerv: "Innervation",
+      oi: "Origin / Insertion",
+      posTitle: "Equistasi Positioning",
+      dev: "Devices (n°)",
+      dur: "Duration (min)",
+      points: "Acupuncture points / Landmarks",
+      print: "PRINT SHEET (PDF)",
+      optCerv: "Cervical / Headache",
+      optLumb: "Lumbar (stability / pain)",
+      optUp: "Upper Limb / Shoulder",
+      optLow: "Lower Limb / Hip",
+      sideBi: "Bilateral", sideL: "Left", sideR: "Right"
+    },
+    it: {
+      btn: "EN",
+      title: "Equistasi – Scheda clinica",
+      sub: "Struttura rapida per distretti e muscoli target.",
+      patient: "Paziente (ID o Nome)",
+      date: "Data",
+      protocol: "Distretto / Protocollo",
+      side: "Lato",
+      muscles: "Muscoli target (principali)",
+      innerv: "Innervazione",
+      oi: "Origine / Inserzione",
+      posTitle: "Equistasi Positioning",
+      dev: "Dispositivi (n°)",
+      dur: "Durata (min)",
+      points: "Punti tipo agopuntura / repere",
+      print: "STAMPA SCHEDA (PDF)",
+      optCerv: "Cervicale / Cefalea",
+      optLumb: "Lombare (stabilità / dolore)",
+      optUp: "Arto Superiore / Spalla",
+      optLow: "Arto Inferiore / Anca",
+      sideBi: "Bilaterale", sideL: "Sinistro", sideR: "Destro"
+    }
+  };
+
+  function toggleLanguage() {
+    currentLang = (currentLang === 'it') ? 'en' : 'it';
+    const langBtn = document.getElementById('lang-btn');
+    const iframe = document.getElementById('bioFrame');
+    
+    // Aggiorna pulsante e testi
+    langBtn.innerText = texts[currentLang].btn;
+    document.getElementById('main-title').innerText = texts[currentLang].title;
+    document.getElementById('sub-title').innerText = texts[currentLang].sub;
+    document.getElementById('lbl-patient').innerText = texts[currentLang].patient;
+    document.getElementById('lbl-date').innerText = texts[currentLang].date;
+    document.getElementById('lbl-protocol').innerText = texts[currentLang].protocol;
+    document.getElementById('lbl-side').innerText = texts[currentLang].side;
+    document.getElementById('lbl-muscles').innerText = texts[currentLang].muscles;
+    document.getElementById('lbl-innerv').innerText = texts[currentLang].innerv;
+    document.getElementById('lbl-oi').innerText = texts[currentLang].oi;
+    document.getElementById('lbl-pos-title').innerText = texts[currentLang].posTitle;
+    document.getElementById('lbl-dev').innerText = texts[currentLang].dev;
+    document.getElementById('lbl-dur').innerText = texts[currentLang].dur;
+    document.getElementById('lbl-points').innerText = texts[currentLang].points;
+    document.getElementById('btn-print').innerText = texts[currentLang].print;
+    
+    // Aggiorna opzioni select
+    document.getElementById('opt-cerv').innerText = texts[currentLang].optCerv;
+    document.getElementById('opt-lumb').innerText = texts[currentLang].optLumb;
+    document.getElementById('opt-upper').innerText = texts[currentLang].optUp;
+    document.getElementById('opt-lower').innerText = texts[currentLang].optLow;
+    document.getElementById('side-bi').innerText = texts[currentLang].sideBi;
+    document.getElementById('side-left').innerText = texts[currentLang].sideL;
+    document.getElementById('side-right').innerText = texts[currentLang].sideR;
+
+    // Aggiorna lingua Iframe BioDigital
+    let src = iframe.src.split('&lang=')[0];
+    iframe.src = src + "&lang=" + currentLang;
+  }
+</script>
 
 </body>
 </html>
