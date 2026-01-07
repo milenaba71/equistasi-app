@@ -8,84 +8,110 @@
     :root{
       --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
       --txt:#e7eef8; --muted:#a8b3c3; --border:rgba(255,255,255,.08);
-      --accent:#4da3ff;
+      --accent:#4da3ff; --ok:#3ddc97;
     }
     *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
     html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
     .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
     
-    /* Pannello Sinistro */
     .left{
       background:linear-gradient(180deg,var(--panel),var(--panel2));
       border-right:1px solid var(--border); padding:16px; overflow:auto;
     }
     
-    /* Logo Equistasi in alto a destra sopra il 3D */
+    /* Logo Equistasi Overlay */
     .logo-container {
       position: absolute; top: 15px; right: 20px; z-index: 1000;
-      background: white; padding: 5px 10px; border-radius: 6px;
+      background: white; padding: 8px; border-radius: 8px;
     }
-    .logo-container img { height: 35px; display: block; }
+    .logo-container img { height: 40px; display: block; }
 
-    /* COPERTURA LOGO BIODIGITAL (In basso a sinistra dell'area 3D) */
-    .hide-logo-overlay {
-      position: absolute; bottom: 0; left: 0; width: 200px; height: 50px;
-      background: #000; z-index: 999; pointer-events: none;
+    /* COPERTURA LOGO BIODIGITAL - DEFINITIVA */
+    .black-box-fix {
+      position: absolute; bottom: 0; left: 0; width: 250px; height: 70px;
+      background: #000 !important; z-index: 9999; pointer-events: none;
     }
 
-    h1{font-size:18px;margin:0 0 8px}
-    .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:12px; padding:12px; margin:12px 0; }
-    .label{font-size:12px;color:var(--muted);margin:8px 0 4px}
-    input, select, textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; }
-    .btn{ border:1px solid var(--accent); background:rgba(77,163,255,.1); color:var(--txt); border-radius:8px; padding:10px; cursor:pointer; width:100%; }
+    h1{font-size:18px;margin:0 0 5px}
+    .sub{font-size:11px; color:var(--muted); margin-bottom:15px; line-height:1.2}
+    .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:12px; padding:12px; margin-bottom:12px; }
+    .label{font-size:11px;color:var(--muted);margin:8px 0 4px; text-transform: uppercase; letter-spacing: 0.5px;}
+    input, select, textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; font-size:13px;}
+    .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+    .btn{ border:1px solid var(--accent); background:rgba(77,163,255,.1); color:var(--txt); border-radius:8px; padding:12px; cursor:pointer; width:100%; font-weight: bold;}
 
-    /* Area 3D */
     .right{position:relative;background:#000}
     iframe{width:100%;height:100%;border:0;display:block}
     
-    @media print{ .right, .btn, .logo-container, .hide-logo-overlay {display:none !important} .app{display:block} .left{width:100%} }
+    @media print{ .right, .logo-container, .black-box-fix {display:none !important} .app{display:block} .left{width:100%; background:white; color:black} }
   </style>
 </head>
 <body>
 
 <div class="app">
   <aside class="left">
-    <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h1 data-i18n="title">Equistasi – Scheda clinica</h1>
-        <button class="btn" style="width:auto; padding:5px 15px" onclick="toggleLang()" id="langBtn">EN</button>
-    </div>
+    <h1>Equistasi – Scheda clinica</h1>
+    <div class="sub">Struttura rapida: distretto → target muscoli → repere → posizionamento → note.</div>
 
     <div class="card">
-      <div class="label" data-i18n="paziente">Paziente (ID o Nome)</div>
-      <input id="patient" placeholder="Es: Milena Baroni" />
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px">
+      <div class="grid2">
         <div>
-          <div class="label" data-i18n="protocollo">Protocollo</div>
+          <div class="label">Paziente (ID)</div>
+          <input id="patient" value="milena baroni" />
+        </div>
+        <div>
+          <div class="label">Data</div>
+          <input type="date" id="date" />
+        </div>
+      </div>
+      
+      <div class="grid2">
+        <div>
+          <div class="label">Distretto / Protocollo</div>
           <select id="protocol">
-            <option data-i18n="cerv">Cervicale</option>
-            <option data-i18n="lomb">Lombare</option>
+            <option>Cervicale / Cefalea</option>
+            <option selected>Lombare (stabilità / dolore)</option>
+            <option>Arto Superiore (spalla/gomito)</option>
+            <option>Arto Inferiore (anca/ginocchio)</option>
+            <option>Tronco / Postura</option>
           </select>
         </div>
         <div>
-          <div class="label" data-i18n="data">Data</div>
-          <input type="date" id="date" />
+          <div class="label">Lato</div>
+          <select id="side">
+            <option>Bilaterale</option>
+            <option>Destro</option>
+            <option selected>Sinistro</option>
+          </select>
         </div>
       </div>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="muscoli">Muscoli Target (principali)</div>
-      <input id="muscles" placeholder="Es. Trapezio..." />
-      <div class="label" data-i18n="note">Trigger Point / Note Manuali</div>
-      <textarea id="notes" style="min-height:100px"></textarea>
+      <div class="label">Muscoli target (principali)</div>
+      <input id="muscles" placeholder="Es: left trapezius" />
+      
+      <div class="grid2">
+        <div>
+          <div class="label">Innervazione</div>
+          <input id="innerv" placeholder="Es: c2" />
+        </div>
+        <div>
+          <div class="label">Origine / Inserzione</div>
+          <input id="oi" />
+        </div>
+      </div>
+
+      <div class="label">Trigger point / Note Manuali</div>
+      <textarea id="triggers" style="min-height:60px"></textarea>
     </div>
 
     <div class="card">
-      <div class="label" data-i18n="posiz">Posizionamento Equistasi</div>
-      <textarea id="pos" style="min-height:80px"></textarea>
+      <div class="label">Posizionamento Equistasi / Repere</div>
+      <textarea id="placement" style="min-height:60px" placeholder="Es: processo spinoso C7..."></textarea>
     </div>
 
-    <button class="btn" onclick="window.print()" data-i18n="stampa">Stampa Scheda</button>
+    <button class="btn" onclick="window.print()">STAMPA SCHEDA CLINICA</button>
   </aside>
 
   <main class="right">
@@ -93,38 +119,25 @@
         <img src="equistasi-logo.png" alt="Equistasi">
     </div>
     
-    <div class="hide-logo-overlay"></div>
+    <div class="black-box-fix"></div>
 
     <iframe id="bioFrame" 
-      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre" 
+      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre&lang=it" 
       allow="fullscreen">
     </iframe>
   </main>
 </div>
 
 <script>
-  // Gestione Lingue
-  const trans = {
-    it: { title:"Equistasi – Scheda clinica", paziente:"Paziente", protocollo:"Protocollo", cerv:"Cervicale", lomb:"Lombare", data:"Data", muscoli:"Muscoli Target", note:"Trigger Point / Note Manuali", posiz:"Posizionamento Equistasi", stampa:"Stampa Scheda" },
-    en: { title:"Equistasi – Clinical Sheet", paziente:"Patient", protocollo:"Protocol", cerv:"Cervical", lomb:"Lumbar", data:"Date", muscoli:"Target Muscles", note:"Trigger Points / Manual Notes", posiz:"Equistasi Positioning", stampa:"Print Sheet" }
-  };
-
-  let cur = "it";
-  function toggleLang() {
-    cur = cur === "it" ? "en" : "it";
-    document.getElementById("langBtn").innerText = cur === "it" ? "EN" : "IT";
-    document.querySelectorAll("[data-i18n]").forEach(el => {
-      el.innerText = trans[cur][el.getAttribute("data-i18n")];
-    });
-    
-    // Ricarica l'iframe con la lingua selezionata per forzare la traduzione di BioDigital
-    const frame = document.getElementById("bioFrame");
-    const baseUrl = "https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre";
-    frame.src = baseUrl + "&lang=" + cur;
-  }
-
-  // Imposta data odierna
+  // Imposta data odierna automatica
   document.getElementById('date').value = new Date().toISOString().substring(0, 10);
+  
+  // Funzione per forzare la traduzione se necessario
+  function updateLanguage(lang) {
+    const frame = document.getElementById('bioFrame');
+    const currentSrc = frame.src.split('&lang=')[0];
+    frame.src = currentSrc + "&lang=" + lang;
+  }
 </script>
 
 </body>
