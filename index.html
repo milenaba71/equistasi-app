@@ -2,66 +2,51 @@
 <html lang="it">
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Equistasi – Clinica (Demo)</title>
-  
-  <script type="text/javascript">
-    function googleTranslateElementInit() {
-      new google.translate.TranslateElement({
-        pageLanguage: 'en', 
-        includedLanguages: 'it,en',
-        layout: google.translate.TranslateElement.InlineLayout.SIMPLE,
-        autoDisplay: true
-      }, 'google_translate_element');
-    }
-  </script>
-  <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
-
+  <title>Equistasi – Scheda clinica</title>
   <style>
     :root{
       --bg:#0b0f14; --panel:#0f1620; --panel2:#111b27;
       --txt:#e7eef8; --muted:#a8b3c3; --border:rgba(255,255,255,.08);
       --accent:#4da3ff;
     }
-    *{box-sizing:border-box;font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial}
-    html,body{height:100%;margin:0;background:var(--bg);color:var(--txt);overflow:hidden}
-    .app{display:grid;grid-template-columns:420px 1fr;height:100vh}
+    *{box-sizing:border-box; font-family: sans-serif;}
+    html,body{height:100%; margin:0; background:var(--bg); color:var(--txt); overflow:hidden}
+    .app{display:grid; grid-template-columns:420px 1fr; height:100vh}
     
-    /* Pannello Sinistro */
     .left{ background:linear-gradient(180deg,var(--panel),var(--panel2)); border-right:1px solid var(--border); padding:16px; overflow:auto; }
     
-    /* Overlay Logo Equistasi (In alto a destra sul 3D) */
-    .logo-overlay { position: absolute; top: 15px; right: 20px; z-index: 1000; background: white; padding: 5px 12px; border-radius: 6px; }
+    /* Logo Equistasi in alto a destra sopra il 3D */
+    .logo-overlay { position: absolute; top: 15px; right: 20px; z-index: 1000; background: white; padding: 5px 12px; border-radius: 6px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); }
     .logo-overlay img { height: 35px; display: block; }
 
-    /* Copertura Logo BioDigital (In basso a sinistra) */
-    .cover-biodigital { position: absolute; bottom: 0; left: 0; width: 220px; height: 60px; background: #000; z-index: 999; pointer-events: none; }
+    /* Copertura logo BioDigital in basso a sinistra */
+    .cover-biodigital { position: absolute; bottom: 0; left: 0; width: 240px; height: 65px; background: #000; z-index: 999; pointer-events: none; }
 
-    h1{font-size:18px;margin:0}
-    .sub{font-size:11px; color:var(--muted); margin-bottom:15px; line-height:1.2}
     .card{ border:1px solid var(--border); background:rgba(255,255,255,.03); border-radius:12px; padding:12px; margin-bottom:10px; }
-    .label{font-size:11px;color:var(--muted);margin:8px 0 4px; text-transform: uppercase;}
+    .label{font-size:11px; color:var(--muted); margin:8px 0 4px; text-transform: uppercase;}
     input, select, textarea{ width:100%; padding:10px; border-radius:8px; border:1px solid var(--border); background:rgba(255,255,255,.04); color:var(--txt); outline:none; font-size:13px;}
     .grid2{display:grid; grid-template-columns:1fr 1fr; gap:10px}
-    .btn-print{ border:1px solid var(--accent); background:rgba(77,163,255,.14); color:var(--txt); border-radius:8px; padding:12px; cursor:pointer; width:100%; font-weight:bold; margin-top:10px;}
-
-    /* Traduttore visibile ma discreto */
-    #google_translate_element { margin-bottom: 10px; }
-
-    .right{position:relative;background:#000}
-    iframe{width:100%;height:100%;border:0;display:block}
     
-    @media print{ .right, .logo-overlay, .cover-biodigital, #google_translate_element {display:none !important} .app{display:block} .left{width:100%; background:white; color:black} }
+    .right{position:relative; background:#000}
+    iframe{width:100%; height:100%; border:0; display:block;}
+
+    /* Stile per la stampa */
+    @media print {
+      .right, .logo-overlay, .cover-biodigital { display: none !important; }
+      .app { display: block; }
+      .left { width: 100%; background: white; color: black; }
+      .card { border: 1px solid #ccc; background: none; }
+      .label { color: #666; }
+      input, select, textarea { color: black; border: 1px solid #ccc; }
+    }
   </style>
 </head>
 <body>
 
 <div class="app">
   <aside class="left">
-    <div id="google_translate_element"></div>
-    
-    <h1>Equistasi – Scheda clinica</h1>
-    <div class="sub">Struttura rapida per distretti e muscoli target.</div>
+    <h1 style="font-size:18px; margin:0">Equistasi – Scheda clinica</h1>
+    <p style="font-size:11px; color:var(--muted)">Struttura rapida per distretti e muscoli target.</p>
 
     <div class="card">
       <div class="grid2">
@@ -71,26 +56,26 @@
         </div>
         <div>
           <div class="label">Data</div>
-          <input type="date" id="date" />
+          <input type="date" id="date" value="2026-01-04" />
         </div>
       </div>
       
       <div class="grid2">
         <div>
           <div class="label">Distretto / Protocollo</div>
-          <select id="protocol">
+          <select>
             <option>Cervicale / Cefalea</option>
             <option selected>Lombare (stabilità / dolore)</option>
-            <option>Arto Superiore</option>
-            <option>Arto Inferiore</option>
+            <option>Arto Superiore / Spalla</option>
+            <option>Arto Inferiore / Anca</option>
           </select>
         </div>
         <div>
           <div class="label">Lato</div>
-          <select id="side">
+          <select>
             <option>Bilaterale</option>
-            <option>Destro</option>
             <option selected>Sinistro</option>
+            <option>Destro</option>
           </select>
         </div>
       </div>
@@ -98,66 +83,60 @@
       <div class="grid2">
         <div>
           <div class="label">Obiettivo clinico</div>
-          <select>
-            <option selected>Riduzione dolore / mobilità</option>
-            <option>Stabilizzazione posturale</option>
-          </select>
+          <select><option selected>Riduzione dolore / mobilità</option></select>
         </div>
         <div>
           <div class="label">Esito (oggi)</div>
-          <select>
-            <option selected>Stabile</option>
-            <option>Migliorato</option>
-          </select>
+          <select><option selected>Stabile</option></select>
         </div>
       </div>
     </div>
 
     <div class="card">
       <div class="label">Muscoli target (principali)</div>
-      <input id="muscles" value="left trapezius" />
+      <input value="left trapezius" />
       
       <div class="grid2">
         <div>
-          <div class="label">Innervazione (radice/nervo)</div>
-          <input id="innerv" value="c2" />
+          <div class="label">Innervazione</div>
+          <input value="c2" />
         </div>
         <div>
           <div class="label">Origine / Inserzione</div>
-          <input id="oi" placeholder="Es: nuca -> clavicola" />
+          <input placeholder="Es: nuca -> clavicola" />
         </div>
       </div>
 
       <div class="label">Trigger point / Note Manuali</div>
-      <textarea id="triggers" style="min-height:60px"></textarea>
+      <textarea style="min-height:60px"></textarea>
     </div>
 
     <div class="card">
+      <div style="font-weight:bold; font-size:13px; margin-bottom:10px">Equistasi Positioning</div>
+      <div class="grid2">
+        <div>
+          <div class="label">Dispositivi (n°)</div>
+          <select><option>1</option><option selected>2</option><option>3</option></select>
+        </div>
+        <div>
+          <div class="label">Durata (min)</div>
+          <input type="number" value="2" />
+        </div>
+      </div>
       <div class="label">Punti tipo agopuntura / repere</div>
-      <textarea id="points" style="min-height:50px"></textarea>
+      <textarea style="min-height:50px"></textarea>
     </div>
 
-    <button class="btn-print" onclick="window.print()">STAMPA SCHEDA</button>
+    <button style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--accent); background:rgba(77,163,255,0.1); color:white; font-weight:bold; cursor:pointer" onclick="window.print()">STAMPA SCHEDA</button>
   </aside>
 
   <main class="right">
-    <div class="logo-overlay">
-        <img src="equistasi-logo.png" alt="Equistasi">
-    </div>
-    
+    <div class="logo-overlay"><img src="equistasi-logo.png" alt="Equistasi Logo"></div>
     <div class="cover-biodigital"></div>
 
-    <iframe id="bioFrame" 
-      src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre&lang=it" 
-      allow="fullscreen">
-    </iframe>
+    <iframe src="https://human.biodigital.com/widget/?be=2b5y&background.colors=0,0,0,1,0,0,0,1&initial.hand-hint=true&ui-info=true&ui-fullscreen=true&ui-center=false&ui-dissect=true&ui-zoom=true&ui-help=true&ui-tools-display=primary&uaid=3Yfre&lang=it"></iframe>
   </main>
 </div>
-
-<script>
-  // Data automatica
-  document.getElementById('date').value = "2026-01-04";
-</script>
 
 </body>
 </html>
