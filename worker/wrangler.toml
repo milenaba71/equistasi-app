@@ -17,7 +17,9 @@ PRO_TYPES = "noleggio prof"
 # AIRTABLE_BASE = "appI8mMIC0khEkLqK"   # EQUITUTTO
 # AIRTABLE_TABLE = "tblmeCftgU0TrG0ck"  # dispositivi disponibili
 
-# Avatar LiveAvatar (HeyGen): id dell'avatar e, facoltativi, voce e lingua.
+# Avatar LiveAvatar (HeyGen): nome (cercato tra i tuoi avatar e quelli pubblici) oppure id esatto;
+# facoltativi voce e lingua.
+LIVEAVATAR_AVATAR_NAME = "Bryan"
 # LIVEAVATAR_AVATAR_ID = "..."
 # LIVEAVATAR_VOICE_ID = "..."
 LIVEAVATAR_LANGUAGE = "it"   # predefinita; l'app invia la lingua scelta dall'utente

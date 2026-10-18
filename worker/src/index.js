@@ -210,13 +210,17 @@ function fromB64url(s) {
  * e fa pronunciare all'avatar le risposte di Claude (repeat). La chiave LiveAvatar resta qui. */
 
 async function avatarToken(body, env, cors) {
-  if (!env.LIVEAVATAR_API_KEY || !env.LIVEAVATAR_AVATAR_ID) return json({ error: 'LiveAvatar non configurato' }, 404, cors);
+  if (!env.LIVEAVATAR_API_KEY || !(env.LIVEAVATAR_AVATAR_ID || env.LIVEAVATAR_AVATAR_NAME)) {
+    return json({ error: 'LiveAvatar non configurato' }, 404, cors);
+  }
+  const avatarId = env.LIVEAVATAR_AVATAR_ID || (await findAvatarId(env));
+  if (!avatarId) return json({ error: 'avatar non trovato' }, 404, cors);
   // Lingua scelta nell'app (codice a 2-3 lettere, es. it, en, zh); altrimenti quella predefinita.
   const lang = body && typeof body.lang === 'string' && /^[a-z]{2,3}$/.test(body.lang) ? body.lang : null;
   const persona = { language: lang || env.LIVEAVATAR_LANGUAGE || 'it' };
   if (env.LIVEAVATAR_VOICE_ID) persona.voice_id = env.LIVEAVATAR_VOICE_ID;
   if (env.LIVEAVATAR_CONTEXT_ID) persona.context_id = env.LIVEAVATAR_CONTEXT_ID;
-  const payload = { mode: 'FULL', avatar_id: env.LIVEAVATAR_AVATAR_ID, avatar_persona: persona };
+  const payload = { mode: 'FULL', avatar_id: avatarId, avatar_persona: persona };
   if (env.LIVEAVATAR_SANDBOX === 'true') payload.is_sandbox = true;
 
   const res = await fetch(`${env.LIVEAVATAR_API_URL || 'https://api.liveavatar.com'}/v1/sessions/token`, {
@@ -242,6 +246,41 @@ async function avatarToken(body, env, cors) {
     return json({ error: 'avatar non disponibile' }, 502, cors);
   }
   return json({ sessionToken: token }, 200, cors);
+}
+
+/* Cerca l'avatar per nome (LIVEAVATAR_AVATAR_NAME, es. "Bryan") tra gli avatar dell'account e quelli
+ * pubblici di LiveAvatar; il risultato resta in memoria finché il Worker è attivo. */
+let cachedAvatar = null;
+
+async function findAvatarId(env) {
+  const wanted = env.LIVEAVATAR_AVATAR_NAME.toLowerCase();
+  if (cachedAvatar && cachedAvatar.name === wanted) return cachedAvatar.id;
+  const api = env.LIVEAVATAR_API_URL || 'https://api.liveavatar.com';
+  for (const path of ['/v1/avatars', '/v1/avatars/public']) {
+    const res = await fetch(api + path, { headers: { 'X-API-KEY': env.LIVEAVATAR_API_KEY, Accept: 'application/json' } });
+    if (!res.ok) {
+      console.error('liveavatar avatars', path, res.status);
+      continue;
+    }
+    const hit = avatarList(await res.json()).find((a) => String(a.name || '').toLowerCase().includes(wanted));
+    if (hit) {
+      cachedAvatar = { name: wanted, id: hit.id || hit.avatar_id };
+      return cachedAvatar.id;
+    }
+  }
+  return null;
+}
+
+/** Trova l'elenco di avatar nella risposta, qualunque sia l'involucro (data, results, avatars…). */
+function avatarList(data) {
+  if (Array.isArray(data)) return data;
+  if (data && typeof data === 'object') {
+    for (const v of Object.values(data)) {
+      const list = avatarList(v);
+      if (list.length) return list;
+    }
+  }
+  return [];
 }
 
 /** Tiene solo messaggi user/assistant di testo, alternati, che iniziano e finiscono con l'utente. */

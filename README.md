@@ -14,7 +14,7 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 
 | Parte | File | Ruolo |
 |---|---|---|
-| Avatar | `assistente/js/photo-avatar.js` | Fisioterapista fotorealistica: tre video in loop (attesa, ascolto, parlato) generati con Higgsfield dallo stesso ritratto, con dissolvenza tra uno stato e l’altro |
+| Avatar | `assistente/js/photo-avatar.js` | Primo, fisioterapista fotorealistico: tre video in loop (attesa, ascolto, parlato) generati con Higgsfield dallo stesso ritratto, con dissolvenza tra uno stato e l’altro |
 | Avatar illustrato | `assistente/js/avatar.js` | Alternativa disegnata in SVG con labiale sincronizzato (`avatar: 'illustrato'` in `config.js`) |
 | Voce | `assistente/js/voice.js` | Web Speech API: riconoscimento vocale (it-IT) e sintesi vocale, frase per frase mentre arriva la risposta |
 | Base di conoscenza | `assistente/knowledge/kb.mjs` | 54 schede: dispositivo, protocolli, 16 studi Equistasi con citazione e DOI, riabilitazione, medicina, agopuntura, applicazioni esplorative, valutazione, sicurezza |
@@ -69,9 +69,13 @@ gli avatar interattivi creati prima non compaiono più nell’account HeyGen pri
 1. Accedi a https://app.liveavatar.com con il tuo account HeyGen e cerca l’avatar tra i tuoi avatar.
    Se non c’è, chiedi al supporto HeyGen la migrazione (avatar HeyGen e LiveAvatar non sono compatibili tra loro)
    oppure creane uno nuovo su LiveAvatar.
-2. Copia **avatar_id** (ed eventualmente **voice_id** di una voce italiana) e la **API key** (sezione sviluppatori).
-3. Nel Worker: `npx wrangler secret put LIVEAVATAR_API_KEY`, poi in `wrangler.toml` imposta `LIVEAVATAR_AVATAR_ID`
-   (e `LIVEAVATAR_VOICE_ID`, meglio una voce multilingue); ripubblica con `npx wrangler deploy`.
+2. Copia la **API key** (sezione sviluppatori) e scegli l’avatar: basta il nome in `LIVEAVATAR_AVATAR_NAME`
+   (predefinito **"Bryan"**, il coach usato nel vecchio embed HeyGen «Rodolfo»): il Worker lo cerca tra i tuoi avatar e
+   quelli pubblici di LiveAvatar. In alternativa metti l’id esatto in `LIVEAVATAR_AVATAR_ID`.
+   Il vecchio embed `labs.heygen.com/guest/streaming-embed` usava la base di conoscenza dimostrativa di HeyGen («demo-1»):
+   qui invece l’avatar pronuncia le risposte di Claude basate sulla base di conoscenza Equistasi.
+3. Nel Worker: `npx wrangler secret put LIVEAVATAR_API_KEY`, poi in `wrangler.toml` controlla `LIVEAVATAR_AVATAR_NAME`
+   (e se vuoi `LIVEAVATAR_VOICE_ID`, meglio una voce multilingue); ripubblica con `npx wrangler deploy`.
 4. In `assistente/js/config.js`: `liveAvatar: true`.
 
 Con l’account gratuito LiveAvatar si può provare in **sandbox** (`LIVEAVATAR_SANDBOX = "true"`): gratis, ma solo con

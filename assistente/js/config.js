@@ -21,12 +21,12 @@ window.ASSISTANT_CONFIG = {
   lang: '',
   // Avatar: 'foto' = fisioterapista fotorealistica (video), 'illustrato' = personaggio disegnato (SVG).
   avatar: 'foto',
-  // Clip dell'avatar fotorealistico, generati con Higgsfield dallo stesso ritratto.
+  // Clip dell'avatar fotorealistico (Primo, fisioterapista), generati con Higgsfield dallo stesso ritratto.
   // Prima la copia nel sito (assistente/media/, vedi tools/scarica-avatar.sh), poi quella su Higgsfield.
   avatarMedia: {
-    poster: ['media/fisioterapista.png', `${HF}/hf_20261018_184307_3e71e495-fcab-4959-938b-e1264f42eafa.png`],
-    idle: ['media/fisioterapista-attesa.mp4', `${HF}/hf_20261018_184415_e121879a-bed5-476e-9deb-bf518e61aa21.mp4`],
-    listening: ['media/fisioterapista-ascolto.mp4', `${HF}/hf_20261018_184409_65e39e5b-3c02-4ca6-b619-47bf8b444277.mp4`],
-    speaking: ['media/fisioterapista-parla.mp4', `${HF}/hf_20261018_184409_102d55d9-01e1-44ea-b33a-e44b126a6e48.mp4`],
+    poster: ['media/primo.png', `${HF}/hf_20261018_190841_95f763ba-0b73-443c-92fb-30f6de2642d4.png`],
+    idle: ['media/primo-attesa.mp4', `${HF}/hf_20261018_191020_f2f1ca95-140c-41c9-8da9-bddf6d55f03c.mp4`],
+    listening: ['media/primo-ascolto.mp4', `${HF}/hf_20261018_190954_ea7467ba-e3aa-4e6f-82bc-00f4836bbf6b.mp4`],
+    speaking: ['media/primo-parla.mp4', `${HF}/hf_20261018_190954_b99a2d05-178a-4fe6-96b8-70ef136a8810.mp4`],
   },
 };
