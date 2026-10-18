@@ -21,7 +21,7 @@ export class PhotoAvatar {
       <span class="pa-think" aria-hidden="true"><i></i><i></i><i></i></span>`;
     const poster = el.querySelector('.pa-poster');
     const posters = list(media.poster);
-    poster.onerror = () => posters.length && (poster.src = posters.shift());
+    poster.onerror = () => (posters.length ? (poster.src = posters.shift()) : (poster.style.visibility = 'hidden'));
     poster.src = posters.shift();
     this.videos = {};
     for (const name of ['idle', 'listening', 'speaking']) {

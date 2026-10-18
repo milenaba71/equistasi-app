@@ -3,9 +3,9 @@
 - `index.html` – scheda clinica con modello anatomico 3D.
 - `assistente/` – **Stasi, l’assistente virtuale con avatar** (vedi sotto).
 
-## Stasi – assistente virtuale Equistasi
+## Stasi – assistente virtuale Equistasi per professionisti
 
-Un avatar animato che parla con l’utente, a voce o per iscritto, e risponde su:
+Un avatar (fisioterapista virtuale) che parla con professionisti sanitari e preparatori atletici, a voce o per iscritto, e risponde su:
 dispositivo Equistasi®, protocolli ufficiali (Parkinson, sclerosi multipla, dolore, dermatomeri, sport),
 letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d’allarme.
 
@@ -23,6 +23,44 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 
 Ogni risposta mostra le **fonti** (schede cliccabili con citazione completa e link alla pubblicazione).
 La conversazione resta solo sul telefono dell’utente (localStorage); il Worker non salva nulla.
+
+### Accoglienza e attivazione
+
+1. All’apertura l’avatar si presenta (tocco su «Inizia», necessario perché i browser permettano l’audio)
+   e chiede se l’utente è **professionista sanitario** o **preparatore atletico**: si risponde con i pulsanti o a voce.
+   Il profilo cambia il tono delle risposte (clinico o sportivo) e i suggerimenti; si cambia dal pulsante in alto.
+2. Poi chiede di **scansionare il seriale di un dispositivo da studio professionale** (fotocamera, stesso lettore
+   dell’app Equistasi Point) o di scriverlo. Il Worker lo cerca in Airtable (base EQUITUTTO → tabella
+   *dispositivi disponibili*) e accetta solo le tipologie in `PRO_TYPES` (predefinito: **noleggio prof**).
+   Se valido rilascia un gettone firmato valido 365 giorni, salvato sul telefono: senza gettone il Worker non
+   risponde (né chat né avatar), così nessuno può consumare le API dall’esterno.
+
+Configurazione del Worker:
+```
+npx wrangler secret put AIRTABLE_TOKEN       # token personale Airtable: scope data.records:read, accesso alla sola base EQUITUTTO
+npx wrangler secret put ACTIVATION_SECRET    # stringa casuale lunga, es. openssl rand -hex 32
+```
+Prova: `curl -X POST https://<worker>/activate -H 'Origin: https://app.equistasi.com' -H 'Content-Type: application/json' -d '{"serial":"20230006869"}'`
+→ `{"valid":true,…}` per un dispositivo «noleggio prof», `{"valid":false}` per gli altri.
+Se `apiUrl` è vuoto (modalità offline) l’attivazione non viene chiesta.
+
+### Avatar HeyGen (LiveAvatar) – es. «Diandra»
+
+HeyGen ha sostituito gli *Interactive Avatar* con **LiveAvatar** (app.liveavatar.com, piattaforma e crediti separati);
+gli avatar interattivi creati prima non compaiono più nell’account HeyGen principale.
+1. Accedi a https://app.liveavatar.com con il tuo account HeyGen e cerca l’avatar tra i tuoi avatar.
+   Se non c’è, chiedi al supporto HeyGen la migrazione (avatar HeyGen e LiveAvatar non sono compatibili tra loro)
+   oppure creane uno nuovo su LiveAvatar.
+2. Copia **avatar_id** (ed eventualmente **voice_id** di una voce italiana) e la **API key** (sezione sviluppatori).
+3. Nel Worker: `npx wrangler secret put LIVEAVATAR_API_KEY`, poi in `wrangler.toml` imposta `LIVEAVATAR_AVATAR_ID`
+   (e `LIVEAVATAR_VOICE_ID`), e `ASSISTANT_NAME = "Diandra"`; ripubblica con `npx wrangler deploy`.
+4. In `assistente/js/config.js`: `liveAvatar: true` e `name: 'Diandra'`.
+
+L’avatar LiveAvatar pronuncia con labiale reale le risposte di Claude (comando *repeat*, modalità FULL con microfono
+dell’avatar spento: ascolto e risposte restano dell’app). Consuma crediti LiveAvatar al minuto: la sessione si apre
+al primo tocco, si chiude dopo 3 minuti senza conversazione o quando l’app va in secondo piano. Finché non è
+collegato, o se non è disponibile, resta l’avatar video qui sotto con la voce del browser.
+Per provare gratis: `LIVEAVATAR_SANDBOX = "true"` (sessioni di circa 1 minuto con l’avatar di prova).
 
 ### Avatar fotorealistico
 
@@ -53,7 +91,7 @@ Il microfono funziona in Chrome, Edge e Safari (serve HTTPS o localhost).
    npx wrangler deploy
    ```
 3. In `worker/wrangler.toml` metti in `ALLOWED_ORIGINS` gli indirizzi da cui si apre l’app.
-4. Copia l’indirizzo del Worker in `assistente/js/config.js` → `chatUrl: 'https://…workers.dev/chat'`.
+4. Copia l’indirizzo del Worker in `assistente/js/config.js` → `apiUrl: 'https://…workers.dev'`.
 
 Modello: `claude-opus-5-5` con effort `low` (risposte rapide per la conversazione vocale); si cambiano con le
 variabili `MODEL` ed `EFFORT` in `wrangler.toml`. È attivo il fallback lato server (`fallbacks: "default"`):

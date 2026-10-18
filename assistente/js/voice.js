@@ -9,12 +9,12 @@ export class Speaker {
     this.lang = lang;
     this.avatar = avatar;
     this.onIdle = onIdle || (() => {});
-    this.enabled = 'speechSynthesis' in window;
-    this.supported = this.enabled;
+    this.supported = 'speechSynthesis' in window || !!avatar.speak;
+    this.enabled = this.supported;
     this.queue = [];
     this.speaking = false;
     this.voice = null;
-    if (this.supported) {
+    if ('speechSynthesis' in window) {
       const pick = () => (this.voice = pickVoice(speechSynthesis.getVoices(), lang));
       pick();
       speechSynthesis.addEventListener('voiceschanged', pick);
@@ -41,7 +41,8 @@ export class Speaker {
 
   stop() {
     this.queue = [];
-    if (this.supported) speechSynthesis.cancel();
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    if (this.avatar.interrupt) this.avatar.interrupt();
     this.speaking = false;
     this.avatar.setState('idle');
   }
@@ -55,6 +56,19 @@ export class Speaker {
       return;
     }
     this.speaking = true;
+    // L'avatar in tempo reale si sta collegando: si aspetta, per non cambiare voce a metà risposta.
+    if (this.avatar.starting) {
+      this.queue.unshift(text);
+      this.avatar.starting.then(() => this.next());
+      return;
+    }
+    // Avatar in tempo reale (LiveAvatar): parla lui, con la sua voce e il suo labiale.
+    if (this.avatar.ready && this.avatar.speak) {
+      this.avatar.setState('speaking');
+      this.avatar.speak(text).then(() => this.next(), () => this.next());
+      return;
+    }
+    if (!('speechSynthesis' in window)) return this.next();
     const u = new SpeechSynthesisUtterance(text);
     u.lang = this.lang;
     if (this.voice) u.voice = this.voice;

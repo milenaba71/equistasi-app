@@ -1,15 +1,22 @@
 /*
  * Configurazione dell'assistente.
  *
- * chatUrl: indirizzo del Worker Cloudflare (cartella worker/), ad esempio
- *   'https://equistasi-assistente.<account>.workers.dev/chat'
- * Se è vuoto, o se il servizio non risponde, l'assistente funziona in modalità
- * "offline": risponde cercando nella base di conoscenza locale.
+ * apiUrl: indirizzo del Worker Cloudflare (cartella worker/), ad esempio
+ *   'https://equistasi-assistente.<account>.workers.dev'
+ * Il Worker risponde con Claude (/chat), verifica il seriale del dispositivo da studio (/activate)
+ * e apre l'avatar HeyGen (/avatar/token).
+ * Se è vuoto l'assistente funziona in modalità "offline" (ricerca nella base di conoscenza locale)
+ * e non chiede l'attivazione.
  */
 const HF = 'https://d8j0ntlcm91z4.cloudfront.net/user_3DOukuRyFd7f2J84gGwrmduEdRX';
 
 window.ASSISTANT_CONFIG = {
-  chatUrl: '',
+  apiUrl: '',
+  // Nome dell'avatar (es. 'Diandra' se recuperi il tuo avatar HeyGen)
+  name: 'Stasi',
+  // Avatar in tempo reale LiveAvatar (HeyGen): true se nel Worker ci sono LIVEAVATAR_API_KEY e LIVEAVATAR_AVATAR_ID.
+  // Finché non è pronto, o se manca, si usa l'avatar qui sotto.
+  liveAvatar: false,
   // Lingua di riconoscimento vocale e sintesi
   lang: 'it-IT',
   // Dopo che l'avatar ha parlato, riapre il microfono (conversazione a mani libere)

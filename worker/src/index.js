@@ -6,7 +6,10 @@
  * streaming (Server-Sent Events). La chiave API resta qui, come secret del Worker:
  * non arriva mai al browser.
  *
- * Risposta: eventi SSE `data: {"t":"..."}` (testo), poi `data: {"done":true}`,
+ * Altri endpoint: POST /activate (seriale del dispositivo da studio → gettone di attivazione),
+ * POST /avatar/token (sessione dell'avatar LiveAvatar di HeyGen).
+ *
+ * Risposta di /chat: eventi SSE `data: {"t":"..."}` (testo), poi `data: {"done":true}`,
  * oppure `data: {"error":"..."}`.
  */
 import Anthropic from '@anthropic-ai/sdk';
@@ -16,7 +19,7 @@ const MODEL = 'claude-opus-5-5';
 const MAX_TURNS = 20; // messaggi della conversazione inviati al modello
 const MAX_CHARS = 4000; // lunghezza massima di ogni messaggio dell'utente
 
-const SYSTEM_PROMPT = `Sei "Stasi", l'assistente virtuale di Equistasi: un avatar che parla con pazienti, sportivi, caregiver e professionisti sanitari. Rispondi nella lingua dell'utente (di solito italiano).
+const SYSTEM_PROMPT = `Sei "{{NOME}}", l'assistente virtuale di Equistasi: un avatar con l'aspetto di una fisioterapista che affianca professionisti sanitari e preparatori atletici che usano Equistasi in studio. Rispondi nella lingua dell'utente (di solito italiano).
 
 Cosa sai: tutto ciò che è nella base di conoscenza qui sotto (dispositivo Equistasi®, protocolli ufficiali, letteratura scientifica pubblicata, riabilitazione, nozioni mediche, sicurezza) più le tue conoscenze mediche e riabilitative generali, che usi quando la base di conoscenza non basta.
 
@@ -37,6 +40,12 @@ ${kbAsText(DOCS)}`;
 
 const DOC_IDS = new Set(DOCS.map((d) => d.id));
 
+// Profilo scelto all'apertura dell'app: si aggiunge DOPO la base di conoscenza, così la cache resta valida.
+const PROFILES = {
+  sanitario: `Stai parlando con un PROFESSIONISTA SANITARIO (fisioterapista, medico, terapista, infermiere…). Usa linguaggio tecnico e anatomico preciso, cita gli studi con dettagli di disegno e limiti, proponi ragionamento clinico (valutazione, scelta dei punti, misure di esito, progressione), e quando utile le applicazioni esplorative con il loro razionale. Ricorda comunque i limiti delle evidenze.`,
+  atletico: `Stai parlando con un PREPARATORE ATLETICO o allenatore. Concentrati su prestazione, controllo neuromuscolare, propriocezione, prevenzione degli infortuni, recupero e protocollo Sport/Elvy, con linguaggio tecnico sportivo. Per dolore, infortuni o patologie invita a coinvolgere medico o fisioterapista.`,
+};
+
 export default {
   async fetch(request, env, ctx) {
     const cors = corsHeaders(request, env);
@@ -44,11 +53,12 @@ export default {
 
     const url = new URL(request.url);
     if (url.pathname === '/health') {
-      return json({ ok: true, kb: KB_VERSION, docs: DOC_IDS.size, model: env.MODEL || MODEL }, 200, cors);
+      return json({ ok: true, kb: KB_VERSION, docs: DOC_IDS.size, model: env.MODEL || MODEL, liveAvatar: !!env.LIVEAVATAR_API_KEY }, 200, cors);
     }
-    if (url.pathname !== '/chat' || request.method !== 'POST') return json({ error: 'not found' }, 404, cors);
+    if (request.method !== 'POST' || !['/chat', '/activate', '/avatar/token'].includes(url.pathname)) {
+      return json({ error: 'not found' }, 404, cors);
+    }
     if (!cors['Access-Control-Allow-Origin']) return json({ error: 'origin not allowed' }, 403, cors);
-    if (!env.ANTHROPIC_API_KEY) return json({ error: 'ANTHROPIC_API_KEY mancante' }, 500, cors);
 
     let body;
     try {
@@ -56,55 +66,175 @@ export default {
     } catch {
       return json({ error: 'JSON non valido' }, 400, cors);
     }
-    const messages = sanitize(body && body.messages);
-    if (!messages) return json({ error: 'conversazione non valida' }, 400, cors);
 
-    const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
-    const { readable, writable } = new TransformStream();
-    const writer = writable.getWriter();
-    const enc = new TextEncoder();
-    const send = (obj) => writer.write(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
+    if (url.pathname === '/activate') return activate(body, env, cors);
 
-    const run = async () => {
-      try {
-        const stream = client.beta.messages.stream({
-          model: env.MODEL || MODEL,
-          max_tokens: 4000,
-          // Chat vocale: risposte rapide. Il pensiero adattivo resta attivo (non disattivabile su questo modello).
-          output_config: { effort: env.EFFORT || 'low' },
-          // Se il modello declina per un falso positivo dei filtri di sicurezza, l'API riprova con il modello consigliato.
-          betas: ['server-side-fallback-2026-07-01'],
-          fallbacks: 'default',
-          // La base di conoscenza è identica per tutte le richieste: viene messa in cache.
-          system: [{ type: 'text', text: SYSTEM_PROMPT, cache_control: { type: 'ephemeral', ttl: '1h' } }],
-          messages,
-        });
-        for await (const event of stream) {
-          if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
-            await send({ t: event.delta.text });
-          }
-        }
-        const final = await stream.finalMessage();
-        if (final.stop_reason === 'refusal') {
-          await send({ t: 'Su questo argomento non posso aiutarti. Per domande su salute e terapie rivolgiti al tuo medico.' });
-        }
-        await send({ done: true });
-      } catch (err) {
-        const status = err && err.status;
-        await send({ error: status === 429 || status === 529 ? 'Servizio occupato, riprova tra poco.' : 'Errore del servizio.' });
-        console.error('anthropic error', status, err && err.message);
-      } finally {
-        await writer.close();
-      }
-    };
-    // Lo streaming continua dopo che la Response è stata restituita.
-    ctx.waitUntil(run());
-
-    return new Response(readable, {
-      headers: { ...cors, 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store' },
-    });
+    // Chat e avatar solo con un dispositivo da studio attivato (se l'attivazione è configurata).
+    if (env.ACTIVATION_SECRET && !(await verifyActivation(body && body.activation, env))) {
+      return json({ error: 'attivazione richiesta', code: 'activation' }, 401, cors);
+    }
+    if (url.pathname === '/avatar/token') return avatarToken(env, cors);
+    return chat(body, env, ctx, cors);
   },
 };
+
+function chat(body, env, ctx, cors) {
+  if (!env.ANTHROPIC_API_KEY) return json({ error: 'ANTHROPIC_API_KEY mancante' }, 500, cors);
+  const messages = sanitize(body && body.messages);
+  if (!messages) return json({ error: 'conversazione non valida' }, 400, cors);
+  const system = [{ type: 'text', text: SYSTEM_PROMPT.replace('{{NOME}}', env.ASSISTANT_NAME || 'Stasi'), cache_control: { type: 'ephemeral', ttl: '1h' } }];
+  if (PROFILES[body.profile]) system.push({ type: 'text', text: PROFILES[body.profile] });
+
+  const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
+  const { readable, writable } = new TransformStream();
+  const writer = writable.getWriter();
+  const enc = new TextEncoder();
+  const send = (obj) => writer.write(enc.encode(`data: ${JSON.stringify(obj)}\n\n`));
+
+  const run = async () => {
+    try {
+      const stream = client.beta.messages.stream({
+        model: env.MODEL || MODEL,
+        max_tokens: 4000,
+        // Chat vocale: risposte rapide. Il pensiero adattivo resta attivo (non disattivabile su questo modello).
+        output_config: { effort: env.EFFORT || 'low' },
+        // Se il modello declina per un falso positivo dei filtri di sicurezza, l'API riprova con il modello consigliato.
+        betas: ['server-side-fallback-2026-07-01'],
+        fallbacks: 'default',
+        // La base di conoscenza è identica per tutte le richieste: viene messa in cache.
+        system,
+        messages,
+      });
+      for await (const event of stream) {
+        if (event.type === 'content_block_delta' && event.delta.type === 'text_delta') {
+          await send({ t: event.delta.text });
+        }
+      }
+      const final = await stream.finalMessage();
+      if (final.stop_reason === 'refusal') {
+        await send({ t: 'Su questo argomento non posso aiutarti. Per domande su salute e terapie rivolgiti al medico.' });
+      }
+      await send({ done: true });
+    } catch (err) {
+      const status = err && err.status;
+      await send({ error: status === 429 || status === 529 ? 'Servizio occupato, riprova tra poco.' : 'Errore del servizio.' });
+      console.error('anthropic error', status, err && err.message);
+    } finally {
+      await writer.close();
+    }
+  };
+  // Lo streaming continua dopo che la Response è stata restituita.
+  ctx.waitUntil(run());
+
+  return new Response(readable, {
+    headers: { ...cors, 'Content-Type': 'text/event-stream; charset=utf-8', 'Cache-Control': 'no-store' },
+  });
+}
+
+/* ───────── Attivazione con il seriale di un dispositivo da studio professionale ─────────
+ * Cerca il seriale nella tabella "dispositivi disponibili" della base Airtable EQUITUTTO e
+ * controlla che la sua tipologia sia tra quelle professionali (PRO_TYPES, default "noleggio prof").
+ * Se valido restituisce un gettone firmato (HMAC) che l'app allega a ogni richiesta. */
+
+const ACTIVATION_DAYS = 365;
+
+async function activate(body, env, cors) {
+  const serial = String((body && body.serial) || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  if (serial.length < 5 || serial.length > 32) return json({ valid: false, reason: 'formato' }, 200, cors);
+  if (!env.AIRTABLE_TOKEN || !env.ACTIVATION_SECRET) return json({ error: 'attivazione non configurata' }, 500, cors);
+
+  const types = (env.PRO_TYPES || 'noleggio prof').split(',').map((t) => t.trim().toLowerCase()).filter(Boolean);
+  const typeCheck = types.map((t) => `FIND('${t.replace(/'/g, '')}', LOWER(ARRAYJOIN({tipologia}, ',')))`).join(',');
+  // Il seriale è già ripulito (solo A-Z, 0-9, -): niente rischio di iniezione nella formula.
+  const formula = `AND(SUBSTITUTE(UPPER({Seriale}&''),' ','')='${serial}', OR(${typeCheck}))`;
+  const base = env.AIRTABLE_BASE || 'appI8mMIC0khEkLqK';
+  const table = env.AIRTABLE_TABLE || 'tblmeCftgU0TrG0ck';
+  const q = new URL(`https://api.airtable.com/v0/${base}/${table}`);
+  q.searchParams.set('filterByFormula', formula);
+  q.searchParams.set('maxRecords', '1');
+  q.searchParams.append('fields[]', 'Seriale');
+
+  const res = await fetch(q, { headers: { Authorization: `Bearer ${env.AIRTABLE_TOKEN}` } });
+  if (!res.ok) {
+    console.error('airtable', res.status, await res.text());
+    return json({ error: 'verifica non disponibile' }, 502, cors);
+  }
+  const data = await res.json();
+  if (!data.records || !data.records.length) return json({ valid: false }, 200, cors);
+  const exp = Date.now() + ACTIVATION_DAYS * 864e5;
+  return json({ valid: true, activation: await sign({ s: serial, exp }, env.ACTIVATION_SECRET), expires: exp }, 200, cors);
+}
+
+async function sign(payload, secret) {
+  const data = b64url(new TextEncoder().encode(JSON.stringify(payload)));
+  return `${data}.${b64url(await hmac(data, secret))}`;
+}
+
+async function verifyActivation(token, env) {
+  if (typeof token !== 'string' || !token.includes('.')) return false;
+  const [data, mac] = token.split('.');
+  const expected = b64url(await hmac(data, env.ACTIVATION_SECRET));
+  if (expected.length !== mac.length) return false;
+  let diff = 0;
+  for (let i = 0; i < mac.length; i++) diff |= mac.charCodeAt(i) ^ expected.charCodeAt(i);
+  if (diff) return false;
+  try {
+    const payload = JSON.parse(new TextDecoder().decode(fromB64url(data)));
+    return payload.exp > Date.now();
+  } catch {
+    return false;
+  }
+}
+
+async function hmac(data, secret) {
+  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+  return new Uint8Array(await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(data)));
+}
+
+function b64url(bytes) {
+  return btoa(String.fromCharCode(...bytes)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+}
+
+function fromB64url(s) {
+  return Uint8Array.from(atob(s.replace(/-/g, '+').replace(/_/g, '/')), (c) => c.charCodeAt(0));
+}
+
+/* ───────── Avatar LiveAvatar (HeyGen) ─────────
+ * Crea un gettone di sessione FULL per l'avatar configurato; l'app lo usa con @heygen/liveavatar-web-sdk
+ * e fa pronunciare all'avatar le risposte di Claude (repeat). La chiave LiveAvatar resta qui. */
+
+async function avatarToken(env, cors) {
+  if (!env.LIVEAVATAR_API_KEY || !env.LIVEAVATAR_AVATAR_ID) return json({ error: 'LiveAvatar non configurato' }, 404, cors);
+  const persona = { language: env.LIVEAVATAR_LANGUAGE || 'it' };
+  if (env.LIVEAVATAR_VOICE_ID) persona.voice_id = env.LIVEAVATAR_VOICE_ID;
+  if (env.LIVEAVATAR_CONTEXT_ID) persona.context_id = env.LIVEAVATAR_CONTEXT_ID;
+  const payload = { mode: 'FULL', avatar_id: env.LIVEAVATAR_AVATAR_ID, avatar_persona: persona };
+  if (env.LIVEAVATAR_SANDBOX === 'true') payload.is_sandbox = true;
+
+  const res = await fetch(`${env.LIVEAVATAR_API_URL || 'https://api.liveavatar.com'}/v1/sessions/token`, {
+    method: 'POST',
+    headers: { 'X-API-KEY': env.LIVEAVATAR_API_KEY, 'Content-Type': 'application/json', Accept: 'application/json' },
+    body: JSON.stringify(payload),
+  });
+  const text = await res.text();
+  if (!res.ok) {
+    console.error('liveavatar', res.status, text);
+    return json({ error: 'avatar non disponibile' }, 502, cors);
+  }
+  let data;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    data = {};
+  }
+  const d = data.data || data;
+  const token = d.session_token || d.token;
+  if (!token) {
+    console.error('liveavatar risposta inattesa', text);
+    return json({ error: 'avatar non disponibile' }, 502, cors);
+  }
+  return json({ sessionToken: token }, 200, cors);
+}
 
 /** Tiene solo messaggi user/assistant di testo, alternati, che iniziano e finiscono con l'utente. */
 function sanitize(input) {

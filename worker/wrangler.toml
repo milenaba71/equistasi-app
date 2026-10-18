@@ -4,11 +4,27 @@ compatibility_date = "2026-09-01"
 compatibility_flags = ["nodejs_compat"]
 
 [vars]
-# Origini autorizzate a chiamare il Worker (separate da virgola). Esempio:
-# "https://milenaba71.github.io,https://app.equistasi.com"
+# Origini autorizzate a chiamare il Worker (separate da virgola).
 ALLOWED_ORIGINS = "https://milenaba71.github.io,https://app.equistasi.com,http://localhost:8000"
+# Nome dell'avatar (uguale a "name" in assistente/js/config.js)
+ASSISTANT_NAME = "Stasi"
 # MODEL = "claude-opus-5-5"
 # EFFORT = "low"
 
-# La chiave API NON va qui: impostala come secret con
+# Attivazione: tipologie di dispositivo (tabella Airtable "dispositivi disponibili", campo tipologia)
+# che sbloccano l'assistente. Separate da virgola, maiuscole/minuscole indifferenti.
+PRO_TYPES = "noleggio prof"
+# AIRTABLE_BASE = "appI8mMIC0khEkLqK"   # EQUITUTTO
+# AIRTABLE_TABLE = "tblmeCftgU0TrG0ck"  # dispositivi disponibili
+
+# Avatar LiveAvatar (HeyGen): id dell'avatar e, facoltativi, voce e lingua.
+# LIVEAVATAR_AVATAR_ID = "..."
+# LIVEAVATAR_VOICE_ID = "..."
+LIVEAVATAR_LANGUAGE = "it"
+# LIVEAVATAR_SANDBOX = "true"   # prove gratuite (sessioni di ~1 minuto, solo avatar di prova)
+
+# Segreti: NON vanno qui. Impostali con
 #   npx wrangler secret put ANTHROPIC_API_KEY
+#   npx wrangler secret put AIRTABLE_TOKEN       # token Airtable in sola lettura (scope data.records:read, base EQUITUTTO)
+#   npx wrangler secret put ACTIVATION_SECRET    # una stringa casuale lunga (es. openssl rand -hex 32)
+#   npx wrangler secret put LIVEAVATAR_API_KEY   # da app.liveavatar.com → Developers
