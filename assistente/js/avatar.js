@@ -1,12 +1,12 @@
 /*
- * Avatar "Stasi": SVG animato senza librerie.
+ * Avatar illustrato: SVG animato senza librerie.
  *  - respiro, battito delle ciglia, sguardo che segue il puntatore e piccoli movimenti spontanei;
  *  - stati: idle | listening | thinking | speaking;
  *  - labiale: forme della bocca (visemi) calcolate dalle lettere della parola pronunciata.
  */
 
 const SVG = `
-<svg viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Stasi, assistente Equistasi">
+<svg viewBox="0 0 300 340" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Primo, assistente Equistasi">
   <defs>
     <linearGradient id="av-skin" x1="0" y1="0" x2="0" y2="1">
       <stop offset="0" stop-color="#f6d3bd"/><stop offset="1" stop-color="#eebc9f"/>

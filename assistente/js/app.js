@@ -4,98 +4,122 @@ import { PhotoAvatar } from './photo-avatar.js';
 import { LiveAvatarStage } from './live-avatar.js';
 import { Speaker, Listener } from './voice.js';
 import { Index, offlineAnswer, redFlag } from './search.js';
+import { LANGS, pickLang, isRtl, t as tr, profileFromSpeech } from './i18n.js';
 
 const CFG = window.ASSISTANT_CONFIG || {};
 // Indirizzo del Worker (accetta anche il vecchio chatUrl che finiva con /chat)
 const API = (CFG.apiUrl || (CFG.chatUrl || '').replace(/\/chat\/?$/, '')).replace(/\/$/, '');
-const STORE_KEY = 'stasi.chat.v1';
-const VOICE_KEY = 'stasi.voice';
-const PROFILE_KEY = 'stasi.profile';
-const ACTIVATION_KEY = 'stasi.activation';
+const STORE_KEY = 'primo.chat.v1';
+const VOICE_KEY = 'primo.voice';
+const PROFILE_KEY = 'primo.profile';
+const ACTIVATION_KEY = 'primo.activation';
+const LANG_KEY = 'primo.lang';
 const DOC_BY_ID = new Map(DOCS.map((d) => [d.id, d]));
 const CITE_RE = /\[\[([a-z0-9-]+)\]\]/g;
-const NAME = CFG.name || 'Stasi';
-
-const PROFILES = {
-  sanitario: {
-    label: 'Professionista sanitario',
-    short: 'Sanitario',
-    greeting: `Sono ${NAME}. Posso aiutarti con i protocolli Equistasi, le evidenze scientifiche, il ragionamento clinico, le applicazioni esplorative e gli agopunti. Scrivimi o parlami.`,
-    suggestions: [
-      'Protocollo SM per la spasticità: quali punti?',
-      'Evidenze su Equistasi nel Parkinson',
-      'Il protocollo non dà beneficio: alternative esplorative?',
-      'Quali test uso per misurare i risultati?',
-      'Agopunti che coincidono con i punti Equistasi',
-      'Protocollo dolore cronico con il metamero',
-    ],
-  },
-  atletico: {
-    label: 'Preparatore atletico',
-    short: 'Atletico',
-    greeting: `Sono ${NAME}. Posso aiutarti con il protocollo Sport, la propriocezione, la prevenzione degli infortuni e il recupero degli atleti. Scrivimi o parlami.`,
-    suggestions: [
-      'Protocollo Sport: dove e per quanto tempo?',
-      'Equistasi e prevenzione del crociato',
-      'Esercizi propriocettivi con il dispositivo',
-      'Come misuro l’effetto su equilibrio e salto?',
-      'In gara: quante ore al massimo?',
-      'Recupero e variabilità cardiaca (HRV)',
-    ],
-  },
-};
-
-const INTRO = `Ciao, sono ${NAME}, la fisioterapista virtuale di Equistasi. Conosco il dispositivo, i protocolli, la letteratura scientifica e la riabilitazione. Prima di iniziare: sei un professionista sanitario o un preparatore atletico?`;
-const ASK_SERIAL = 'Per attivarmi, scansiona il numero di serie di un dispositivo Equistasi da studio professionale: lo trovi sul retro del dispositivo.';
-const ACTIVATED = 'Perfetto, dispositivo da studio verificato: sono attiva. Come posso aiutarti?';
+const NAME = CFG.name || 'Primo';
+const MAX_SILENCE = 3; // ascolti a vuoto di fila prima di fermare la conversazione
 
 const $ = (id) => document.getElementById(id);
 const log = $('log');
 const input = $('input');
+const subtitleEl = $('subtitle');
 const statusEl = $('status');
 const onboardEl = $('onboard');
+
+let lang = pickLang(readPref(LANG_KEY) || CFG.lang);
+const t = (key, vars = {}) => tr(lang, key, { name: NAME, ...vars });
 
 const base = CFG.avatar === 'illustrato' || !CFG.avatarMedia ? new Avatar($('avatar')) : new PhotoAvatar($('avatar'), CFG.avatarMedia);
 const avatar = API && CFG.liveAvatar ? new LiveAvatarStage($('avatar'), base, avatarToken) : base;
 const index = new Index(DOCS);
 let messages = load();
 let busy = false;
-let lastByVoice = false;
 let online = !!API;
-let profile = PROFILES[readPref(PROFILE_KEY)] ? readPref(PROFILE_KEY) : null;
+let profile = ['sanitario', 'atletico'].includes(readPref(PROFILE_KEY)) ? readPref(PROFILE_KEY) : null;
 let activation = readPref(ACTIVATION_KEY);
-let step = null; // passo dell'accoglienza in corso: start | profile | activation
+let step = null; // accoglienza in corso: start | profile | activation
+let talking = false; // conversazione a voce attiva (ascolta → risponde → riascolta)
+let silence = 0;
+let heard = false;
 
-const speaker = new Speaker(CFG.lang || 'it-IT', avatar, {
+const speaker = new Speaker(lang, avatar, {
+  onSentence: (text) => showSubtitle(text),
   onIdle: () => {
+    document.body.classList.remove('speaking');
     if (busy) return avatar.setState('thinking'); // la risposta sta ancora arrivando
     avatar.setState('idle');
     setStatus('');
-    if (CFG.handsFree && lastByVoice && listener.supported) listener.start();
+    if (talking) setTimeout(listen, 250); // tocca all'utente
   },
 });
 speaker.setEnabled(readPref(VOICE_KEY) !== 'off');
 
-const listener = new Listener(CFG.lang || 'it-IT', {
-  onInterim: (t) => {
-    input.value = t;
-    autosize();
-  },
-  onFinal: (t) => {
-    lastByVoice = true;
-    if (step === 'profile') return answerProfile(t);
-    if (step === 'activation') return activate(t);
-    send(t);
+const listener = new Listener(lang, {
+  onInterim: (text) => showSubtitle(text, true),
+  onFinal: (text) => {
+    heard = true;
+    silence = 0;
+    showSubtitle(text, true);
+    if (step === 'profile') return answerProfile(text);
+    if (step === 'activation') return activate(text);
+    send(text);
   },
   onEnd: () => {
-    $('btn-mic').classList.remove('on');
-    if (!busy && !speaker.busy) avatar.setState('idle');
+    document.body.classList.remove('listening');
+    if (heard || !talking) return;
+    // nessuna parola: si riascolta qualche volta, poi ci si ferma (anche per non consumare l'avatar)
+    if (++silence >= MAX_SILENCE) {
+      stopTalking();
+      setStatus(t('noSpeech'));
+    } else if (!busy && !speaker.busy) listen();
   },
   onError: (err) => {
-    if (err === 'not-allowed' || err === 'service-not-allowed') setStatus('Permesso microfono negato: puoi scrivere.');
-    else if (err === 'no-speech') setStatus('Non ho sentito nulla. Riprova.');
+    if (err === 'not-allowed' || err === 'service-not-allowed') {
+      stopTalking();
+      setStatus(t('micDenied'));
+      toggleKeyboard(true);
+    }
   },
 });
+
+/* ───────── Conversazione a voce ───────── */
+
+function startTalking() {
+  if (!listener.supported) {
+    setStatus(t('noRecognition'));
+    return toggleKeyboard(true);
+  }
+  talking = true;
+  silence = 0;
+  document.body.classList.add('talking');
+  applyUi();
+  wakeAvatar();
+  if (!speaker.busy && !busy) listen();
+}
+
+function stopTalking() {
+  talking = false;
+  document.body.classList.remove('talking', 'listening');
+  listener.stop();
+  speaker.stop();
+  applyUi();
+  if (!busy) avatar.setState('idle');
+}
+
+function listen() {
+  if (!talking || busy || speaker.busy || listener.active) return;
+  heard = false;
+  listener.start();
+  document.body.classList.add('listening');
+  avatar.setState('listening');
+  setStatus(t('listening'));
+}
+
+function showSubtitle(text, fromUser = false) {
+  subtitleEl.textContent = text.replace(CITE_RE, '').replace(/\*\*/g, '');
+  subtitleEl.classList.toggle('user', fromUser);
+  if (!fromUser) document.body.classList.add('speaking');
+}
 
 /* ───────── Accoglienza: presentazione, profilo, attivazione ───────── */
 
@@ -105,7 +129,7 @@ function startOnboarding() {
   messages = [];
   save();
   log.innerHTML = '';
-  $('chips').innerHTML = '';
+  showSubtitle(t('welcome'));
   showStep('start');
 }
 
@@ -115,24 +139,23 @@ function showStep(s) {
   document.body.classList.toggle('onboarding', !!s);
   if (!s) return;
   if (s === 'start') {
-    addBubble('assistant', `Benvenuto in Equistasi. Tocca «Inizia» e ${NAME} si presenta.`);
-    onboardEl.innerHTML = '<button type="button" class="btn big" id="ob-start">Inizia</button>';
+    onboardEl.innerHTML = `<button type="button" class="btn big alt" id="ob-start">${esc(t('start'))}</button>`;
     $('ob-start').onclick = () => {
-      wakeAvatar();
-      say(INTRO);
+      say(t('intro'));
       showStep('profile');
+      startTalking(); // dopo la presentazione il microfono si apre da solo per la risposta
     };
   } else if (s === 'profile') {
-    onboardEl.innerHTML = Object.entries(PROFILES)
-      .map(([k, p]) => `<button type="button" class="btn big" data-profile="${k}">${p.label}</button>`)
+    onboardEl.innerHTML = ['sanitario', 'atletico']
+      .map((k, i) => `<button type="button" class="btn big${i ? '' : ' alt'}" data-profile="${k}">${esc(t(k))}</button>`)
       .join('');
     onboardEl.querySelectorAll('[data-profile]').forEach((b) => (b.onclick = () => chooseProfile(b.dataset.profile)));
   } else if (s === 'activation') {
     onboardEl.innerHTML = `
-      <button type="button" class="btn big" id="ob-scan">Scansiona il seriale</button>
+      <button type="button" class="btn big alt" id="ob-scan">${esc(t('scan'))}</button>
       <form class="ob-serial" id="ob-form">
-        <input id="ob-serial" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="oppure scrivi il numero di serie" aria-label="Numero di serie">
-        <button type="submit" class="btn">Attiva</button>
+        <input id="ob-serial" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="${esc(t('serialPh'))}" aria-label="${esc(t('serialPh'))}">
+        <button type="submit" class="btn">${esc(t('activate'))}</button>
       </form>`;
     $('ob-scan').onclick = scanSerial;
     $('ob-form').onsubmit = (e) => {
@@ -142,11 +165,11 @@ function showStep(s) {
   }
 }
 
-/** Presentazione con la voce (va chiamata da un tocco: i browser bloccano l'audio senza interazione). */
+/** L'avatar dice una frase fuori dalla conversazione con Claude (accoglienza, avvisi). */
 function say(text) {
   addBubble('assistant', text);
-  scrollDown();
   speaker.say(text);
+  if (!speaker.enabled) showSubtitle(text);
 }
 
 function wakeAvatar() {
@@ -154,126 +177,113 @@ function wakeAvatar() {
 }
 
 function chooseProfile(p) {
-  if (!PROFILES[p]) return;
   profile = p;
   writePref(PROFILE_KEY, p);
-  updateProfileBtn();
-  addBubble('user', PROFILES[p].label);
+  applyUi();
+  addBubble('user', t(p));
+  listener.stop();
   speaker.stop();
   if (needsActivation()) {
-    say(ASK_SERIAL);
+    say(t('askSerial'));
     showStep('activation');
-  } else finishOnboarding();
+  } else finishOnboarding(true);
 }
 
 function answerProfile(text) {
-  const t = text.toLowerCase();
-  if (/sanitar|fisioterap|medic|terapist|infermier|osteopat|clinic|logoped|riabilit/.test(t)) return chooseProfile('sanitario');
-  if (/preparator|atletic|allenator|sport|coach|personal trainer|mister/.test(t)) return chooseProfile('atletico');
-  say('Scusa, non ho capito. Sei un professionista sanitario o un preparatore atletico?');
+  const p = profileFromSpeech(text) || (/\b(1|uno|one)\b|一/.test(text) ? 'sanitario' : /\b(2|due|two)\b|二/.test(text) ? 'atletico' : null);
+  if (p) return chooseProfile(p);
+  say(t('notUnderstood'));
 }
 
 async function scanSerial() {
-  if (!window.EqScan) return setStatus('Fotocamera non disponibile: scrivi il numero di serie.');
+  if (!window.EqScan) return setStatus(t('noCamera'));
+  listener.stop();
   try {
-    const code = await window.EqScan.open({ accept: (t) => /^[A-Z0-9-]{5,32}$/i.test(t.trim()) });
+    const code = await window.EqScan.open({ accept: (x) => /^[A-Z0-9-]{5,32}$/i.test(x.trim()) });
     if (code) activate(code);
-  } catch (err) {
-    setStatus(err.message === 'denied' ? 'Permesso fotocamera negato: scrivi il numero di serie.' : 'Fotocamera non disponibile: scrivi il numero di serie.');
+  } catch {
+    setStatus(t('noCamera'));
   }
 }
 
 async function activate(raw) {
   const serial = String(raw || '').toUpperCase().replace(/[^A-Z0-9-]/g, '');
-  if (serial.length < 5) return setStatus('Numero di serie non valido.');
-  setStatus('Verifico il dispositivo…');
+  if (serial.length < 5) return setStatus(t('badSerial'));
+  setStatus(t('verifying'));
   avatar.setState('thinking');
   try {
     const res = await fetch(`${API}/activate`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ serial }) });
     const data = await res.json().catch(() => ({}));
     avatar.setState('idle');
+    setStatus('');
     if (res.status === 500 && data.error === 'attivazione non configurata') {
       activation = 'libera'; // il Worker non richiede l'attivazione
     } else if (data.valid) {
       activation = data.activation;
     } else if (res.ok) {
-      setStatus('');
-      return say(`Il seriale ${serial} non risulta tra i dispositivi da studio professionale. Controlla il numero o contatta Equistasi.`);
+      return say(t('invalidSerial', { serial }));
     } else throw new Error('http ' + res.status);
     writePref(ACTIVATION_KEY, activation);
-    setStatus('');
-    addBubble('user', `Seriale ${serial}`);
-    say(ACTIVATED);
+    addBubble('user', serial);
+    say(t('activated'));
     finishOnboarding(false);
   } catch {
     avatar.setState('idle');
-    setStatus('Verifica non riuscita: controlla la connessione e riprova.');
+    setStatus(t('verifyFail'));
   }
 }
 
-function finishOnboarding(greet = true) {
+function finishOnboarding(greet) {
   showStep(null);
-  if (greet) say(PROFILES[profile].greeting);
-  renderChips();
+  if (greet) say(greeting());
 }
+
+const greeting = () => t(profile === 'atletico' ? 'greetAtletico' : 'greetSanitario');
 
 /* ───────── Interfaccia ───────── */
 
+function applyUi() {
+  document.documentElement.lang = lang;
+  document.documentElement.dir = isRtl(lang) ? 'rtl' : 'ltr';
+  $('lbl-talk').textContent = talking ? t('stop') : t('talk');
+  $('btn-talk').setAttribute('aria-label', talking ? t('stop') : t('talk'));
+  $('lbl-keyboard').textContent = t('keyboard');
+  $('lbl-transcript').textContent = t('transcript');
+  $('ttl-transcript').textContent = t('transcript');
+  $('btn-close-transcript').textContent = t('close');
+  $('btn-send').setAttribute('aria-label', t('send'));
+  $('btn-new').setAttribute('aria-label', t('newChat'));
+  $('btn-new').title = t('newChat');
+  $('disclaimer').textContent = t('disclaimer');
+  input.placeholder = t('keyboard') + '…';
+  const mode = $('mode');
+  mode.textContent = online ? t('online') : t('offline');
+  mode.className = `mode ${online ? 'on' : 'off'}`;
+  const pb = $('btn-profile');
+  pb.hidden = !profile;
+  if (profile) {
+    pb.textContent = t(profile);
+    pb.title = t('changeProfile');
+  }
+  if (step) showStep(step); // ridisegna i pulsanti dell'accoglienza nella nuova lingua
+}
+
 function render() {
   log.innerHTML = '';
-  addBubble('assistant', profile ? PROFILES[profile].greeting : '');
   for (const m of messages) addBubble(m.role, m.content);
-  renderChips();
-  updateMode();
-  scrollDown();
+  const last = [...messages].reverse().find((m) => m.role === 'assistant');
+  showSubtitle(greeting());
+  renderSources($('live-sources'), last ? citations(last.content) : []);
 }
 
-function renderChips() {
-  const chips = $('chips');
-  chips.innerHTML = '';
-  if (messages.length || !profile || step) return;
-  for (const s of PROFILES[profile].suggestions) {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'chip';
-    b.textContent = s;
-    b.onclick = () => {
-      lastByVoice = false;
-      send(s);
-    };
-    chips.appendChild(b);
-  }
-}
-
-function updateProfileBtn() {
-  const b = $('btn-profile');
-  b.hidden = !profile;
-  if (profile) b.textContent = PROFILES[profile].short;
-}
-
-function addBubble(role, text, pending = false) {
-  const li = document.createElement('li');
-  li.className = `msg ${role}${pending ? ' pending' : ''}`;
-  const body = document.createElement('div');
-  body.className = 'body';
-  li.appendChild(body);
-  const src = document.createElement('div');
-  src.className = 'sources';
-  li.appendChild(src);
-  log.appendChild(li);
-  fillBubble(li, text);
-  return li;
-}
-
-function fillBubble(li, text) {
+function citations(text) {
   const ids = [];
-  const shown = text.replace(CITE_RE, (_, id) => {
-    if (DOC_BY_ID.has(id) && !ids.includes(id)) ids.push(id);
-    return '';
-  });
-  li.querySelector('.body').innerHTML = formatText(shown);
-  const src = li.querySelector('.sources');
-  src.innerHTML = '';
+  for (const [, id] of text.matchAll(CITE_RE)) if (DOC_BY_ID.has(id) && !ids.includes(id)) ids.push(id);
+  return ids;
+}
+
+function renderSources(container, ids) {
+  container.innerHTML = '';
   for (const id of ids) {
     const d = DOC_BY_ID.get(id);
     const b = document.createElement('button');
@@ -281,19 +291,34 @@ function fillBubble(li, text) {
     b.className = `src src-${d.cat}`;
     b.textContent = d.cat === 'studio' ? `📄 ${d.title}` : d.title;
     b.onclick = () => openSource(d);
-    src.appendChild(b);
+    container.appendChild(b);
   }
 }
 
-function formatText(t) {
-  const esc = t
-    .trim()
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
+function addBubble(role, text, pending = false) {
+  const li = document.createElement('li');
+  li.className = `msg ${role}${pending ? ' pending' : ''}`;
+  li.innerHTML = '<div class="body"></div><div class="sources"></div>';
+  log.appendChild(li);
+  fillBubble(li, text);
+  log.scrollTop = log.scrollHeight;
+  return li;
+}
+
+function fillBubble(li, text) {
+  li.querySelector('.body').innerHTML = formatText(text.replace(CITE_RE, ''));
+  renderSources(li.querySelector('.sources'), citations(text));
+}
+
+function esc(s) {
+  return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function formatText(text) {
+  const html = esc(text.trim())
     .replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
     .replace(/[ \t]+([.,;:])/g, '$1');
-  return esc
+  return html
     .split(/\n{2,}/)
     .map((p) => {
       const lines = p.split('\n');
@@ -316,19 +341,16 @@ function openSource(d) {
   $('source-dlg').showModal();
 }
 
-function setStatus(t) {
-  statusEl.textContent = t;
+function setStatus(text) {
+  statusEl.textContent = text;
 }
 
-function updateMode() {
-  const el = $('mode');
-  el.textContent = online ? 'Online' : 'Offline';
-  el.className = `mode ${online ? 'on' : 'off'}`;
-  el.title = online ? 'Risposte generate dall’intelligenza artificiale sulla base di conoscenza Equistasi' : 'Risposte dalla base di conoscenza locale (servizio AI non configurato o non raggiungibile)';
-}
-
-function scrollDown() {
-  log.scrollTop = log.scrollHeight;
+function toggleKeyboard(force) {
+  const form = $('composer');
+  const show = force ?? form.hidden;
+  form.hidden = !show;
+  $('btn-keyboard').setAttribute('aria-pressed', String(show));
+  if (show) input.focus();
 }
 
 function autosize() {
@@ -336,33 +358,29 @@ function autosize() {
   input.style.height = Math.min(input.scrollHeight, 140) + 'px';
 }
 
-/* ───────── Conversazione ───────── */
+/* ───────── Domanda e risposta ───────── */
 
 async function send(text) {
   text = (text || '').trim();
   if (!text || busy) return;
-  if (step) {
-    // durante l'accoglienza la casella di testo risponde alla domanda in corso
-    input.value = '';
-    if (step === 'profile') return answerProfile(text);
-    if (step === 'activation') return activate(text);
-    return;
-  }
+  input.value = '';
+  autosize();
+  if (step === 'profile') return answerProfile(text);
+  if (step === 'activation') return activate(text);
+  if (step) return;
   listener.stop();
   speaker.stop();
   wakeAvatar();
-  input.value = '';
-  autosize();
-  $('chips').innerHTML = '';
 
   messages.push({ role: 'user', content: text });
   addBubble('user', text);
+  showSubtitle(text, true);
+  $('live-sources').innerHTML = '';
   const li = addBubble('assistant', '', true);
-  scrollDown();
   busy = true;
   $('btn-send').disabled = true;
   avatar.setState('thinking');
-  setStatus('Sto pensando…');
+  setStatus(t('thinking'));
 
   const voice = sentenceSpeaker();
   let answer = '';
@@ -370,7 +388,7 @@ async function send(text) {
   if (urgent) {
     answer = urgent;
     fillBubble(li, answer);
-    voice.push(answer);
+    voice.push(answer + '\n\n');
     if (online) answer += '\n\n'; // l'AI aggiunge poi il resto della risposta
   }
 
@@ -381,7 +399,6 @@ async function send(text) {
       streamed += chunk;
       fillBubble(li, answer + streamed);
       voice.push(chunk);
-      scrollDown();
       if (!speaker.busy) setStatus('');
     });
     answer += streamed;
@@ -394,12 +411,12 @@ async function send(text) {
       $('btn-send').disabled = false;
       activation = null;
       writePref(ACTIVATION_KEY, '');
-      say(ASK_SERIAL);
+      say(t('askSerial'));
       return showStep('activation');
     }
     if (err.message !== 'offline') {
       online = false;
-      updateMode();
+      applyUi();
     }
     if (!urgent) {
       answer = offlineAnswer(index, text);
@@ -410,18 +427,19 @@ async function send(text) {
 
   voice.flush();
   li.classList.remove('pending');
+  renderSources($('live-sources'), citations(answer));
   messages.push({ role: 'assistant', content: answer.trim() });
   save();
   busy = false;
   $('btn-send').disabled = false;
-  scrollDown();
   if (!speaker.busy) {
     avatar.setState('idle');
     setStatus('');
+    if (talking) listen();
   }
 }
 
-/** Legge ad alta voce la risposta frase per frase, mentre arriva. */
+/** Fa parlare l'avatar frase per frase mentre la risposta arriva (anche cinese e giapponese). */
 function sentenceSpeaker() {
   let buf = '';
   const speak = (s) => {
@@ -432,7 +450,7 @@ function sentenceSpeaker() {
     push(chunk) {
       buf += chunk;
       let m;
-      while ((m = buf.match(/^([\s\S]*?[.!?…:])(\s+|\n)/)) || (m = buf.match(/^([\s\S]*?)\n\n/))) {
+      while ((m = buf.match(/^([\s\S]*?(?:[.!?…:;](?=\s)|[。！？；：]))\s*/)) || (m = buf.match(/^([\s\S]*?)\n\n/))) {
         speak(m[1]);
         buf = buf.slice(m[0].length);
       }
@@ -448,7 +466,7 @@ async function streamChat(history, onText) {
   const res = await fetch(`${API}/chat`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ messages: history.slice(-20), profile, activation }),
+    body: JSON.stringify({ messages: history.slice(-20), profile, activation, lang }),
   });
   if (res.status === 401) throw new Error('activation');
   if (!res.ok || !res.body) throw new Error('http ' + res.status);
@@ -478,12 +496,12 @@ async function streamChat(history, onText) {
   if (!got) throw new Error('risposta vuota');
 }
 
-/** Gettone di sessione per l'avatar LiveAvatar (HeyGen), rilasciato dal Worker. */
+/** Gettone di sessione per l'avatar LiveAvatar (HeyGen), rilasciato dal Worker, nella lingua scelta. */
 async function avatarToken() {
   const res = await fetch(`${API}/avatar/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ activation }),
+    body: JSON.stringify({ activation, lang: lang.split('-')[0] }),
   });
   if (!res.ok) throw new Error('avatar ' + res.status);
   return (await res.json()).sessionToken;
@@ -523,41 +541,43 @@ function writePref(k, v) {
 
 /* ───────── Eventi ───────── */
 
+$('btn-talk').addEventListener('click', () => (talking ? stopTalking() : startTalking()));
+$('btn-keyboard').addEventListener('click', () => toggleKeyboard());
+$('btn-transcript').addEventListener('click', () => {
+  $('transcript-dlg').showModal();
+  log.scrollTop = log.scrollHeight;
+});
+$('btn-close-transcript').addEventListener('click', () => $('transcript-dlg').close());
+
 $('composer').addEventListener('submit', (e) => {
   e.preventDefault();
-  lastByVoice = false;
   send(input.value);
 });
 input.addEventListener('keydown', (e) => {
   if (e.key === 'Enter' && !e.shiftKey) {
     e.preventDefault();
-    lastByVoice = false;
     send(input.value);
   }
 });
 input.addEventListener('input', autosize);
 
-$('btn-mic').addEventListener('click', () => {
-  if (!listener.supported) {
-    setStatus('Il riconoscimento vocale non è disponibile in questo browser: prova con Chrome o Safari, oppure scrivi.');
-    return;
-  }
-  if (listener.active) {
-    listener.stop();
-    return;
-  }
-  speaker.stop(); // interrompe l'avatar se sta parlando
-  if (!step) wakeAvatar();
-  listener.start();
-  $('btn-mic').classList.add('on');
-  avatar.setState('listening');
-  setStatus('Ti ascolto…');
+const langSel = $('lang');
+langSel.innerHTML = LANGS.map(([code, name]) => `<option value="${code}">${name}</option>`).join('');
+langSel.value = lang;
+langSel.addEventListener('change', () => {
+  lang = langSel.value;
+  writePref(LANG_KEY, lang);
+  stopTalking();
+  speaker.setLang(lang);
+  listener.setLang(lang);
+  if (avatar.stop) avatar.stop(); // la sessione LiveAvatar riparte nella nuova lingua
+  applyUi();
+  showSubtitle(step === 'start' ? t('welcome') : step ? t(step === 'profile' ? 'askProfile' : 'askSerial') : greeting());
 });
 
 const voiceBtn = $('btn-voice');
 function syncVoiceBtn() {
   voiceBtn.setAttribute('aria-pressed', String(speaker.enabled));
-  voiceBtn.setAttribute('aria-label', speaker.enabled ? 'Voce dell’avatar attiva' : 'Voce dell’avatar disattivata');
 }
 voiceBtn.addEventListener('click', () => {
   speaker.setEnabled(!speaker.enabled);
@@ -568,40 +588,19 @@ syncVoiceBtn();
 if (!speaker.supported) voiceBtn.hidden = true;
 
 $('btn-new').addEventListener('click', () => {
-  speaker.stop();
-  listener.stop();
+  stopTalking();
   messages = [];
   save();
   render();
 });
 
 $('btn-profile').addEventListener('click', () => {
-  speaker.stop();
-  listener.stop();
-  messages = [];
-  save();
-  log.innerHTML = '';
-  $('chips').innerHTML = '';
-  wakeAvatar();
-  say('Dimmi pure: sei un professionista sanitario o un preparatore atletico?');
+  stopTalking();
+  say(t('askProfile'));
   showStep('profile');
+  startTalking();
 });
 
-setStatus(`Ciao! Sono ${NAME}.`);
-updateMode();
-updateProfileBtn();
-if (!profile || needsActivation()) {
-  startOnboarding();
-} else {
-  render();
-  // Saluto vocale al primo tocco (i browser permettono l'audio solo dopo un'interazione).
-  document.addEventListener(
-    'pointerdown',
-    (e) => {
-      if (messages.length || step || e.target.closest('button, textarea, input')) return;
-      wakeAvatar();
-      speaker.say(PROFILES[profile].greeting);
-    },
-    { once: true }
-  );
-}
+applyUi();
+if (!profile || needsActivation()) startOnboarding();
+else render();

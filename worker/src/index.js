@@ -19,7 +19,7 @@ const MODEL = 'claude-opus-5-5';
 const MAX_TURNS = 20; // messaggi della conversazione inviati al modello
 const MAX_CHARS = 4000; // lunghezza massima di ogni messaggio dell'utente
 
-const SYSTEM_PROMPT = `Sei "{{NOME}}", l'assistente virtuale di Equistasi: un avatar con l'aspetto di una fisioterapista che affianca professionisti sanitari e preparatori atletici che usano Equistasi in studio. Rispondi nella lingua dell'utente (di solito italiano).
+const SYSTEM_PROMPT = `Sei "{{NOME}}", l'assistente virtuale di Equistasi: un avatar fisioterapista che affianca professionisti sanitari e preparatori atletici che usano Equistasi in studio. Rispondi nella lingua dell'utente (di solito italiano).
 
 Cosa sai: tutto ciò che è nella base di conoscenza qui sotto (dispositivo Equistasi®, protocolli ufficiali, letteratura scientifica pubblicata, riabilitazione, nozioni mediche, sicurezza) più le tue conoscenze mediche e riabilitative generali, che usi quando la base di conoscenza non basta.
 
@@ -73,7 +73,7 @@ export default {
     if (env.ACTIVATION_SECRET && !(await verifyActivation(body && body.activation, env))) {
       return json({ error: 'attivazione richiesta', code: 'activation' }, 401, cors);
     }
-    if (url.pathname === '/avatar/token') return avatarToken(env, cors);
+    if (url.pathname === '/avatar/token') return avatarToken(body, env, cors);
     return chat(body, env, ctx, cors);
   },
 };
@@ -82,8 +82,14 @@ function chat(body, env, ctx, cors) {
   if (!env.ANTHROPIC_API_KEY) return json({ error: 'ANTHROPIC_API_KEY mancante' }, 500, cors);
   const messages = sanitize(body && body.messages);
   if (!messages) return json({ error: 'conversazione non valida' }, 400, cors);
-  const system = [{ type: 'text', text: SYSTEM_PROMPT.replace('{{NOME}}', env.ASSISTANT_NAME || 'Stasi'), cache_control: { type: 'ephemeral', ttl: '1h' } }];
-  if (PROFILES[body.profile]) system.push({ type: 'text', text: PROFILES[body.profile] });
+  const system = [{ type: 'text', text: SYSTEM_PROMPT.replace('{{NOME}}', env.ASSISTANT_NAME || 'Primo'), cache_control: { type: 'ephemeral', ttl: '1h' } }];
+  const extra = [];
+  if (PROFILES[body.profile]) extra.push(PROFILES[body.profile]);
+  const lang = typeof body.lang === 'string' && /^[a-z]{2,3}(-[A-Za-z]{2,4})?$/.test(body.lang) ? body.lang : null;
+  if (lang && !lang.startsWith('it')) {
+    extra.push(`Lingua della conversazione: ${lang} (codice BCP-47). Rispondi SEMPRE in questa lingua, anche se la base di conoscenza è in italiano: traduci contenuti e termini (lascia invariati nomi propri, titoli delle pubblicazioni e i marcatori [[id]]). Se l'utente scrive in un'altra lingua, rispondi nella sua.`);
+  }
+  if (extra.length) system.push({ type: 'text', text: extra.join('\n\n') });
 
   const client = new Anthropic({ apiKey: env.ANTHROPIC_API_KEY, baseURL: env.ANTHROPIC_BASE_URL || undefined });
   const { readable, writable } = new TransformStream();
@@ -203,9 +209,11 @@ function fromB64url(s) {
  * Crea un gettone di sessione FULL per l'avatar configurato; l'app lo usa con @heygen/liveavatar-web-sdk
  * e fa pronunciare all'avatar le risposte di Claude (repeat). La chiave LiveAvatar resta qui. */
 
-async function avatarToken(env, cors) {
+async function avatarToken(body, env, cors) {
   if (!env.LIVEAVATAR_API_KEY || !env.LIVEAVATAR_AVATAR_ID) return json({ error: 'LiveAvatar non configurato' }, 404, cors);
-  const persona = { language: env.LIVEAVATAR_LANGUAGE || 'it' };
+  // Lingua scelta nell'app (codice a 2-3 lettere, es. it, en, zh); altrimenti quella predefinita.
+  const lang = body && typeof body.lang === 'string' && /^[a-z]{2,3}$/.test(body.lang) ? body.lang : null;
+  const persona = { language: lang || env.LIVEAVATAR_LANGUAGE || 'it' };
   if (env.LIVEAVATAR_VOICE_ID) persona.voice_id = env.LIVEAVATAR_VOICE_ID;
   if (env.LIVEAVATAR_CONTEXT_ID) persona.context_id = env.LIVEAVATAR_CONTEXT_ID;
   const payload = { mode: 'FULL', avatar_id: env.LIVEAVATAR_AVATAR_ID, avatar_persona: persona };

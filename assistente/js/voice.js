@@ -2,23 +2,31 @@
  * Voce: sintesi (l'avatar parla) e riconoscimento (l'utente parla), con le Web Speech API del browser.
  */
 
-const PREFERRED = ['google italiano', 'federica', 'alice', 'elsa', 'paola', 'isabella', 'emma'];
+// Voci preferite per l'italiano (le altre lingue usano la prima voce disponibile per quella lingua)
+const PREFERRED = ['google italiano', 'federica', 'alice', 'elsa', 'paola', 'isabella', 'emma', 'google 普通话', 'tingting', 'google us english', 'samantha'];
 
 export class Speaker {
-  constructor(lang, avatar, { onIdle } = {}) {
+  constructor(lang, avatar, { onIdle, onSentence } = {}) {
     this.lang = lang;
     this.avatar = avatar;
     this.onIdle = onIdle || (() => {});
+    this.onSentence = onSentence || (() => {}); // sottotitoli
     this.supported = 'speechSynthesis' in window || !!avatar.speak;
     this.enabled = this.supported;
     this.queue = [];
     this.speaking = false;
     this.voice = null;
     if ('speechSynthesis' in window) {
-      const pick = () => (this.voice = pickVoice(speechSynthesis.getVoices(), lang));
+      const pick = () => (this.voice = pickVoice(speechSynthesis.getVoices(), this.lang));
       pick();
       speechSynthesis.addEventListener('voiceschanged', pick);
+      this.pick = pick;
     }
+  }
+
+  setLang(lang) {
+    this.lang = lang;
+    if (this.pick) this.pick();
   }
 
   setEnabled(on) {
@@ -62,6 +70,7 @@ export class Speaker {
       this.avatar.starting.then(() => this.next());
       return;
     }
+    this.onSentence(text);
     // Avatar in tempo reale (LiveAvatar): parla lui, con la sua voce e il suo labiale.
     if (this.avatar.ready && this.avatar.speak) {
       this.avatar.setState('speaking');
@@ -88,24 +97,36 @@ export class Speaker {
       const word = text.slice(e.charIndex, e.charIndex + (e.charLength || 0)) || text.slice(e.charIndex).split(/\s/)[0];
       this.avatar.speakWord(word);
     };
+    let finished = false;
     const done = () => {
+      if (finished) return;
+      finished = true;
       clearTimeout(babbleTimer);
+      clearTimeout(guard);
       this.next();
     };
+    // Riserva: alcuni browser non inviano "end" (o non hanno voci per la lingua): non si resta bloccati.
+    const guard = setTimeout(done, 4000 + text.length * 110);
     u.onend = done;
     u.onerror = done;
-    speechSynthesis.speak(u);
+    try {
+      speechSynthesis.speak(u);
+    } catch {
+      done();
+    }
   }
 }
 
 function pickVoice(voices, lang) {
-  const base = lang.slice(0, 2);
-  const same = voices.filter((v) => v.lang && v.lang.toLowerCase().startsWith(base));
+  const base = lang.split('-')[0].toLowerCase();
+  const norm = (l) => (l || '').replace('_', '-').toLowerCase();
+  const same = voices.filter((v) => norm(v.lang).startsWith(base));
+  const exact = same.filter((v) => norm(v.lang) === lang.toLowerCase());
   for (const name of PREFERRED) {
-    const v = same.find((x) => x.name.toLowerCase().includes(name));
+    const v = (exact.length ? exact : same).find((x) => x.name.toLowerCase().includes(name));
     if (v) return v;
   }
-  return same.find((v) => v.lang === lang) || same[0] || null;
+  return exact[0] || same[0] || null;
 }
 
 export class Listener {
@@ -117,6 +138,7 @@ export class Listener {
     const r = new SR();
     r.lang = lang;
     r.interimResults = true;
+    this.lang = lang;
     r.continuous = false;
     r.maxAlternatives = 1;
     let finalText = '';
@@ -138,6 +160,10 @@ export class Listener {
       onEnd && onEnd();
     };
     this.rec = r;
+  }
+
+  setLang(lang) {
+    if (this.rec) this.rec.lang = lang;
   }
 
   start() {

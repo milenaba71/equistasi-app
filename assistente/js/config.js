@@ -12,15 +12,13 @@ const HF = 'https://d8j0ntlcm91z4.cloudfront.net/user_3DOukuRyFd7f2J84gGwrmduEdR
 
 window.ASSISTANT_CONFIG = {
   apiUrl: '',
-  // Nome dell'avatar (es. 'Diandra' se recuperi il tuo avatar HeyGen)
-  name: 'Stasi',
+  // Nome dell'avatar (uguale ad ASSISTANT_NAME nel Worker)
+  name: 'Primo',
   // Avatar in tempo reale LiveAvatar (HeyGen): true se nel Worker ci sono LIVEAVATAR_API_KEY e LIVEAVATAR_AVATAR_ID.
   // Finché non è pronto, o se manca, si usa l'avatar qui sotto.
   liveAvatar: false,
-  // Lingua di riconoscimento vocale e sintesi
-  lang: 'it-IT',
-  // Dopo che l'avatar ha parlato, riapre il microfono (conversazione a mani libere)
-  handsFree: false,
+  // Lingua iniziale se l'utente non ne ha scelta una (altrimenti quella del telefono); si cambia dal menu 🌐
+  lang: '',
   // Avatar: 'foto' = fisioterapista fotorealistica (video), 'illustrato' = personaggio disegnato (SVG).
   avatar: 'foto',
   // Clip dell'avatar fotorealistico, generati con Higgsfield dallo stesso ritratto.

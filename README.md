@@ -1,11 +1,12 @@
 # equistasi-app
 
 - `index.html` – scheda clinica con modello anatomico 3D.
-- `assistente/` – **Stasi, l’assistente virtuale con avatar** (vedi sotto).
+- `assistente/` – **Primo, l’assistente virtuale con avatar** (vedi sotto).
 
-## Stasi – assistente virtuale Equistasi per professionisti
+## Primo – assistente virtuale Equistasi per professionisti
 
-Un avatar (fisioterapista virtuale) che parla con professionisti sanitari e preparatori atletici, a voce o per iscritto, e risponde su:
+Un avatar con cui **si parla a voce**, in qualunque lingua (cinese compreso), pensato per professionisti sanitari
+e preparatori atletici. Risponde su:
 dispositivo Equistasi®, protocolli ufficiali (Parkinson, sclerosi multipla, dolore, dermatomeri, sport),
 letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d’allarme.
 
@@ -23,6 +24,23 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 
 Ogni risposta mostra le **fonti** (schede cliccabili con citazione completa e link alla pubblicazione).
 La conversazione resta solo sul telefono dell’utente (localStorage); il Worker non salva nulla.
+
+### Conversazione a voce
+
+Non è una chat: l’avatar occupa lo schermo e si parla con il grande pulsante **«Parla con Primo»**.
+La conversazione è a mani libere: Primo ascolta, risponde a voce (con i sottotitoli) e riapre il microfono da solo;
+dopo 3 ascolti a vuoto si ferma. Toccando il pulsante mentre parla lo si interrompe.
+Le fonti citate compaiono sotto i sottotitoli; **Scrivi** e **Trascrizione** restano disponibili ma nascosti.
+
+### Lingue
+
+Menu 🌐 in alto: 44 lingue per microfono e voce (italiano, inglese, cinese mandarino e taiwanese, spagnolo, francese,
+tedesco, portoghese, russo, arabo, giapponese, coreano, hindi, turco, …). All’avvio usa la lingua del telefono.
+- Claude risponde sempre nella lingua scelta, traducendo la base di conoscenza (che resta in italiano).
+- Testi dell’interfaccia tradotti in italiano, inglese, cinese, spagnolo, francese, tedesco, portoghese, russo,
+  arabo (da destra a sinistra) e giapponese; le altre lingue usano l’inglese (`assistente/js/i18n.js`).
+- La voce del browser usa la voce di sistema di quella lingua; l’avatar LiveAvatar riceve la lingua quando si apre la sessione.
+- In modalità offline (senza Worker) le risposte restano in italiano.
 
 ### Accoglienza e attivazione
 
@@ -44,7 +62,7 @@ Prova: `curl -X POST https://<worker>/activate -H 'Origin: https://app.equistasi
 → `{"valid":true,…}` per un dispositivo «noleggio prof», `{"valid":false}` per gli altri.
 Se `apiUrl` è vuoto (modalità offline) l’attivazione non viene chiesta.
 
-### Avatar HeyGen (LiveAvatar) – es. «Diandra»
+### Avatar HeyGen (LiveAvatar)
 
 HeyGen ha sostituito gli *Interactive Avatar* con **LiveAvatar** (app.liveavatar.com, piattaforma e crediti separati);
 gli avatar interattivi creati prima non compaiono più nell’account HeyGen principale.
@@ -53,8 +71,12 @@ gli avatar interattivi creati prima non compaiono più nell’account HeyGen pri
    oppure creane uno nuovo su LiveAvatar.
 2. Copia **avatar_id** (ed eventualmente **voice_id** di una voce italiana) e la **API key** (sezione sviluppatori).
 3. Nel Worker: `npx wrangler secret put LIVEAVATAR_API_KEY`, poi in `wrangler.toml` imposta `LIVEAVATAR_AVATAR_ID`
-   (e `LIVEAVATAR_VOICE_ID`), e `ASSISTANT_NAME = "Diandra"`; ripubblica con `npx wrangler deploy`.
-4. In `assistente/js/config.js`: `liveAvatar: true` e `name: 'Diandra'`.
+   (e `LIVEAVATAR_VOICE_ID`, meglio una voce multilingue); ripubblica con `npx wrangler deploy`.
+4. In `assistente/js/config.js`: `liveAvatar: true`.
+
+Con l’account gratuito LiveAvatar si può provare in **sandbox** (`LIVEAVATAR_SANDBOX = "true"`): gratis, ma solo con
+l’avatar di prova e sessioni di circa 1 minuto. Per un avatar personalizzato e sessioni lunghe servono crediti LiveAvatar.
+Il nome dell’assistente si cambia in `ASSISTANT_NAME` (Worker) e `name` (config.js).
 
 L’avatar LiveAvatar pronuncia con labiale reale le risposte di Claude (comando *repeat*, modalità FULL con microfono
 dell’avatar spento: ascolto e risposte restano dell’app). Consuma crediti LiveAvatar al minuto: la sessione si apre
@@ -114,7 +136,7 @@ Dopo ogni modifica ripubblica sia il sito sia il Worker (`npx wrangler deploy`),
 - **Applicazioni esplorative** (categoria `esplorativo`, schede con bordo giallo): regole per sperimentare in sicurezza e
   razionali fisioterapici (ventre muscolare e giunzione miotendinea, antagonista nella spasticità, catene miofasciali,
   caviglia/piede/cervicale per l’equilibrio, idee per distretto, abbinamento con l’esercizio).
-  Stasi le presenta sempre come **non validate da studi su Equistasi e fuori dai protocolli ufficiali**, partendo dal
+  Primo le presenta sempre come **non validate da studi su Equistasi e fuori dai protocolli ufficiali**, partendo dal
   protocollo standard, con un test per misurarne l’effetto e da concordare con il fisioterapista.
 
 ### Letteratura inclusa
@@ -126,4 +148,4 @@ Alashram 2023 (revisione sistematica), Spolaor 2023 (Front Sports Act Living), B
 revisione sulla vibrazione focale 2025 (J Clin Med), studio registrato NCT02848898.
 Le schede riportano solo dati verificati; dove un dato (es. elenco autori) non è stato verificato è scritto.
 
-> Stasi fornisce informazioni generali e non sostituisce medico o fisioterapista.
+> Primo è uno strumento di supporto per professionisti e non sostituisce il giudizio clinico.

@@ -17,7 +17,7 @@ export class PhotoAvatar {
     this.el = el;
     el.classList.add('photo');
     el.innerHTML = `
-      <img class="pa-poster" alt="Stasi, fisioterapista Equistasi">
+      <img class="pa-poster" alt="Primo, assistente Equistasi">
       <span class="pa-think" aria-hidden="true"><i></i><i></i><i></i></span>`;
     const poster = el.querySelector('.pa-poster');
     const posters = list(media.poster);
