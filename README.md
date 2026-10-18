@@ -13,7 +13,8 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 
 | Parte | File | Ruolo |
 |---|---|---|
-| Avatar | `assistente/js/avatar.js` | SVG animato: respiro, sguardo, ciglia, stati (ascolto, pensiero, parola), labiale dai confini di parola della sintesi vocale |
+| Avatar | `assistente/js/photo-avatar.js` | Fisioterapista fotorealistica: tre video in loop (attesa, ascolto, parlato) generati con Higgsfield dallo stesso ritratto, con dissolvenza tra uno stato e l’altro |
+| Avatar illustrato | `assistente/js/avatar.js` | Alternativa disegnata in SVG con labiale sincronizzato (`avatar: 'illustrato'` in `config.js`) |
 | Voce | `assistente/js/voice.js` | Web Speech API: riconoscimento vocale (it-IT) e sintesi vocale, frase per frase mentre arriva la risposta |
 | Base di conoscenza | `assistente/knowledge/kb.mjs` | 44 schede: dispositivo, protocolli, 16 studi Equistasi con citazione e DOI, riabilitazione, medicina, valutazione, sicurezza |
 | Cervello AI | `worker/` | Cloudflare Worker che chiama Claude (Anthropic) con l’intera base di conoscenza nel prompt (prompt caching): la chiave API resta sul server |
@@ -22,6 +23,16 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 
 Ogni risposta mostra le **fonti** (schede cliccabili con citazione completa e link alla pubblicazione).
 La conversazione resta solo sul telefono dell’utente (localStorage); il Worker non salva nulla.
+
+### Avatar fotorealistico
+
+I clip sono indicati in `avatarMedia` di `assistente/js/config.js`: l’app prova prima la copia nel sito
+(`assistente/media/`) e poi quella sul CDN di Higgsfield. Per non dipendere dal CDN esterno:
+```
+sh tools/scarica-avatar.sh && git add assistente/media
+```
+Il labiale dei video è generico (non segue parola per parola la voce). Per un labiale perfettamente
+sincronizzato servirebbe un servizio di avatar in streaming a pagamento (es. HeyGen, D-ID, Simli).
 
 ### Avvio locale
 

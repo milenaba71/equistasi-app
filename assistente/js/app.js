@@ -1,5 +1,6 @@
 import { DOCS, CATEGORIES } from '../knowledge/kb.mjs';
 import { Avatar } from './avatar.js';
+import { PhotoAvatar } from './photo-avatar.js';
 import { Speaker, Listener } from './voice.js';
 import { Index, offlineAnswer, redFlag } from './search.js';
 
@@ -24,7 +25,7 @@ const log = $('log');
 const input = $('input');
 const statusEl = $('status');
 
-const avatar = new Avatar($('avatar'));
+const avatar = CFG.avatar === 'illustrato' || !CFG.avatarMedia ? new Avatar($('avatar')) : new PhotoAvatar($('avatar'), CFG.avatarMedia);
 const index = new Index(DOCS);
 let messages = load();
 let busy = false;
