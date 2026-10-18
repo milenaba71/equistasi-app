@@ -6,5 +6,9 @@ Video corso narrato tratto dal deck "Corso EQUISTASI per terapisti" (29 slide).
 - `narrazione.json` — testo della narrazione in italiano, una voce per slide (`[id_slide, testo]`).
 - `render-slide.mjs` — script Playwright usato per renderizzare le slide dal deck.
 
-La narrazione è generata con Higgsfield (`seed_audio`, voce preset **Julian**);
+La narrazione è generata con Higgsfield (voce preset **Julian**);
 il montaggio (slide + audio, 1080p H.264/AAC) è eseguito con ffmpeg.
+
+Versione 2: narrazione con motore ElevenLabs (voce Julian), nome pronunciato "Equistàsi",
+e 4 clip illustrative di valutazione (anamnesi, Timed Up and Go, palpazione lombare,
+mobilità cervicale) inserite nelle slide 10, 14, 20 e 24.
