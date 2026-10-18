@@ -3,7 +3,7 @@
  */
 
 const STOP = new Set(('a ad al alla alle allo ai agli all anche avere c che chi ci come con cosa cui da dal dalla dalle dai degli dei del della delle dello di e ed è gli ha hai ho i il in io la le lei lo loro lui ma mi mia mio ne nel nella nelle nei negli no non o per perché più può quale quali quando quanto se sei si sia sono su sua sue suo sul sulla tra tu tua tuo un una uno vi voi the and of to is what how ' +
-  'posso puoi devo fare fa essere sto mio mia miei dove ciao grazie vorrei sapere dimmi parlami spiegami').split(' '));
+  'posso puoi devo fare fa essere sto mio mia miei dove ciao grazie vorrei sapere dimmi parlami spiegami trova trovo trovare').split(' '));
 
 export function tokenize(text) {
   return text
@@ -70,6 +70,7 @@ const INTENTS = [
   [/\b(uso|usa|usare|usarlo|applic\w*|metter\w*|mett\w*|dove|protocoll\w*|punti|tenerlo|quante ore)\b/i, 'protocollo'],
   [/\b(studi\w*|evidenz\w*|letteratura|pubblicaz\w*|ricerc\w*|scientific\w*|trial)\b/i, 'studio'],
   [/\b(eserciz\w*|riabilit\w*|fisioterap\w*|allenament\w*)\b/i, 'riabilitazione'],
+  [/\b(alternativ\w*|esplorativ\w*|altri punti|altro punto|non funziona|nessun beneficio|personalizz\w*|sperimenta\w*|spasticit\w*|antagonist\w*|catena|catene)\b/i, 'esplorativo'],
   [/\b(cos.?[eè]|che cos|come funziona|cos.? fa|a cosa serve|meccanismo)\b/i, 'dispositivo'],
   [/\b(urgen\w*|emergen\w*|pericolo\w*|effetti collaterali|controindicaz\w*)\b/i, 'sicurezza'],
 ];
@@ -125,7 +126,8 @@ export function offlineAnswer(index, query) {
       .sort((a, b) => b.score - a.score)
       .slice(0, doc.cat === 'protocollo' ? 6 : 3)
       .sort((a, b) => a.i - b.i);
-    out.push(scored.map((x) => x.s).join(' ') + ` [[${doc.id}]]`);
+    const note = doc.cat === 'esplorativo' ? 'Attenzione: è un’applicazione esplorativa, non fa parte dei protocolli ufficiali e non è validata da studi su Equistasi; decidila con il fisioterapista. ' : '';
+    out.push(note + scored.map((x) => x.s).join(' ') + ` [[${doc.id}]]`);
   }
   return out.join('\n\n');
 }

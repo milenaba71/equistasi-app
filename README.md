@@ -16,7 +16,7 @@ letteratura scientifica pubblicata, riabilitazione e nozioni mediche, segnali d�
 | Avatar | `assistente/js/photo-avatar.js` | Fisioterapista fotorealistica: tre video in loop (attesa, ascolto, parlato) generati con Higgsfield dallo stesso ritratto, con dissolvenza tra uno stato e l’altro |
 | Avatar illustrato | `assistente/js/avatar.js` | Alternativa disegnata in SVG con labiale sincronizzato (`avatar: 'illustrato'` in `config.js`) |
 | Voce | `assistente/js/voice.js` | Web Speech API: riconoscimento vocale (it-IT) e sintesi vocale, frase per frase mentre arriva la risposta |
-| Base di conoscenza | `assistente/knowledge/kb.mjs` | 44 schede: dispositivo, protocolli, 16 studi Equistasi con citazione e DOI, riabilitazione, medicina, valutazione, sicurezza |
+| Base di conoscenza | `assistente/knowledge/kb.mjs` | 54 schede: dispositivo, protocolli, 16 studi Equistasi con citazione e DOI, riabilitazione, medicina, agopuntura, applicazioni esplorative, valutazione, sicurezza |
 | Cervello AI | `worker/` | Cloudflare Worker che chiama Claude (Anthropic) con l’intera base di conoscenza nel prompt (prompt caching): la chiave API resta sul server |
 | Modalità offline | `assistente/js/search.js` | Se il Worker non è configurato o non risponde: ricerca BM25 nella base di conoscenza locale |
 | Sicurezza | `search.js` + prompt | Riconosce sintomi d’allarme (ictus, dolore al petto, svenimento…) e indica subito il 112/118 |
@@ -58,7 +58,7 @@ Il microfono funziona in Chrome, Edge e Safari (serve HTTPS o localhost).
 Modello: `claude-opus-5-5` con effort `low` (risposte rapide per la conversazione vocale); si cambiano con le
 variabili `MODEL` ed `EFFORT` in `wrangler.toml`. È attivo il fallback lato server (`fallbacks: "default"`):
 se il modello declina per un falso positivo dei filtri di sicurezza, l’API riprova automaticamente con il modello consigliato.
-La base di conoscenza (circa 15.000 token) è in cache per un’ora: le domande successive costano molto meno.
+La base di conoscenza (circa 20.000 token) è in cache per un’ora: le domande successive costano molto meno.
 
 ### Ampliare la base di conoscenza
 
@@ -67,6 +67,17 @@ La base di conoscenza (circa 15.000 token) è in cache per un’ora: le domande 
   (`title`, `source`, `url`, `cat`, `tags`), poi `python3 tools/pdf2kb.py cartella/` → genera `knowledge/extra.mjs`.
 
 Dopo ogni modifica ripubblica sia il sito sia il Worker (`npx wrangler deploy`), che legge la stessa base di conoscenza.
+
+### Agopuntura e applicazioni esplorative
+
+- **Agopuntura**: evidenze (meta-analisi Vickers 2018, Cochrane su cefalea ed emicrania, NICE 2021), principali agopunti
+  con localizzazione e cautele in gravidanza, sovrapposizione tra agopunti, trigger point e punti Equistasi (C7 = GV14 Dazhui,
+  polpaccio ≈ BL57 Chengshan, tibiale anteriore = ST36 Zusanli).
+- **Applicazioni esplorative** (categoria `esplorativo`, schede con bordo giallo): regole per sperimentare in sicurezza e
+  razionali fisioterapici (ventre muscolare e giunzione miotendinea, antagonista nella spasticità, catene miofasciali,
+  caviglia/piede/cervicale per l’equilibrio, idee per distretto, abbinamento con l’esercizio).
+  Stasi le presenta sempre come **non validate da studi su Equistasi e fuori dai protocolli ufficiali**, partendo dal
+  protocollo standard, con un test per misurarne l’effetto e da concordare con il fisioterapista.
 
 ### Letteratura inclusa
 

@@ -6,7 +6,7 @@
  *  - dal Worker (worker/src/index.js), che la inserisce per intero nel prompt di Claude.
  *
  * Ogni documento: { id, cat, title, source, url?, tags, text }.
- *   cat: dispositivo | protocollo | studio | riabilitazione | medicina | valutazione | sicurezza
+ *   cat: dispositivo | protocollo | studio | riabilitazione | medicina | esplorativo | valutazione | sicurezza
  * Le schede "studio" riportano SOLO dati verificati sulle pubblicazioni; dove un dato
  * non è stato verificato è scritto esplicitamente.
  *
@@ -344,6 +344,7 @@ Conclusione: la microvibrazione focale può essere uno strumento efficace nella 
 - Sport: Guiotto 2022 (70 ciclisti), Spolaor 2023 (10 calciatrici).
 - Neurofisiologia: Cruciani 2022 (volontari sani).
 Giudizio onesto: i risultati sono incoraggianti e coerenti nel suggerire benefici su equilibrio, cammino, cadute e dolore, con buona tollerabilità; tuttavia gli studi sono per lo più piccoli, pilota o non controllati, e alcuni esiti primari non sono risultati significativi (Volpe 2014). Servono studi randomizzati più ampi. Equistasi va considerato un complemento alla riabilitazione e alle terapie, non un sostituto.
+Agopuntura: nessuno studio pubblicato su Equistasi applicato sui punti di agopuntura (vedi schede agopuntura ed esplorative).
 Questa sintesi copre la letteratura indicizzata reperita; possono esistere tesi, poster e abstract congressuali non inclusi. Nuovi studi si aggiungono con tools/pdf2kb.py.`,
   },
 
@@ -533,6 +534,161 @@ Tibiale anteriore: davanti alla tibia, lato esterno; solleva la punta del piede 
 Consiglio: per valutare Equistasi ripetere lo stesso test, nelle stesse condizioni (orario, farmaci, scarpe), prima e dopo l’applicazione, meglio con video, e annotare i risultati.`,
   },
 
+  /* ───────────────────────── Agopuntura ───────────────────────── */
+  {
+    id: 'agopuntura-evidenze',
+    cat: 'medicina',
+    title: 'Agopuntura: cos’è e cosa dicono le evidenze',
+    source: 'Vickers AJ et al. Acupuncture for chronic pain: update of an individual patient data meta-analysis. J Pain. 2018;19(5):455-474; Linde K et al. Cochrane Database Syst Rev 2016 (cefalea tensiva CD007587; profilassi dell’emicrania CD001218); NICE NG193 (2021) dolore cronico primario; Lee A et al. Cochrane 2015 (stimolazione di PC6, CD003281)',
+    tags: ['agopuntura', 'agopressione', 'medicina tradizionale cinese', 'mtc', 'dolore cronico', 'cefalea', 'emicrania', 'nausea', 'evidenze'],
+    text: `L’agopuntura nasce dalla medicina tradizionale cinese: si stimolano punti precisi del corpo (agopunti), lungo percorsi chiamati meridiani, con aghi sottili; varianti non invasive sono l’agopressione (pressione con le dita), la stimolazione elettrica transcutanea dei punti e i cerotti sui punti. In Italia l’agopuntura con aghi è un atto medico: la esegue un medico con formazione specifica.
+Spiegazione fisiologica moderna: la stimolazione attiva fibre nervose di muscoli, fasce e cute e modula il dolore a livello spinale (meccanismo del "cancello") e centrale (oppioidi endogeni, sistemi discendenti di controllo del dolore).
+Evidenze principali:
+- Dolore cronico (mal di schiena, collo, artrosi, cefalea, spalla): la meta-analisi su dati individuali di circa 20.000 pazienti (Vickers 2018) mostra che l’agopuntura è superiore sia all’agopuntura simulata (sham) sia all’assenza di agopuntura; l’effetto rispetto allo sham è moderato e in gran parte persiste a 12 mesi.
+- Cefalea tensiva frequente o cronica e profilassi dell’emicrania: revisioni Cochrane (Linde 2016) favorevoli; per l’emicrania l’effetto è simile ai farmaci di profilassi.
+- Le linee guida NICE (2021) per il dolore cronico primario consentono un ciclo di agopuntura in ambito sanitario.
+- Nausea e vomito: la stimolazione del punto PC6 (Neiguan), anche solo con pressione, riduce la nausea postoperatoria (Cochrane 2015).
+Effetti indesiderati dell’agopuntura con aghi, in mani esperte, sono rari e lievi (piccoli ematomi, dolenzia).
+Equistasi e agopuntura: non sono stati trovati studi pubblicati su Equistasi applicato sui punti di agopuntura. L’uso su agopunti è quindi un’ipotesi esplorativa (vedi schede "Applicazioni esplorative").`,
+  },
+  {
+    id: 'agopuntura-trigger-point',
+    cat: 'medicina',
+    title: 'Agopunti, trigger point e punti Equistasi: dove si sovrappongono',
+    source: 'Melzack R, Stillwell DM, Fox EJ. Trigger points and acupuncture points for pain: correlations and implications. Pain. 1977;3(1):3-23; Dorsher PT. Myofascial referred-pain data provide physiologic evidence of acupuncture meridians. J Altern Complement Med. 2008 (correlazione discussa in letteratura); localizzazione standard dei punti OMS (WHO Standard Acupuncture Point Locations, 2008)',
+    tags: ['agopuntura', 'trigger point', 'agopunti', 'dazhui', 'gv14', 'chengshan', 'bl57', 'c7', 'polpaccio', 'meridiani'],
+    text: `Molti agopunti si trovano negli stessi punti dei trigger point miofasciali: Melzack (1977) riportò una corrispondenza di circa il 71% per i punti usati nel dolore; analisi successive (Dorsher 2008) indicano corrispondenze anatomiche ancora più alte, anche se il tema è dibattuto. In entrambi i casi si tratta di zone ricche di recettori e terminazioni nervose, spesso nel ventre muscolare o vicino a giunzioni muscolo-tendinee, nervi e fasce.
+Sovrapposizioni con i punti classici Equistasi:
+- C7 (protocolli Parkinson, SM, sport) coincide con GV14 Dazhui, sotto il processo spinoso di C7.
+- Il soleo/polpaccio (protocolli Parkinson e sport) è vicino a BL57 Chengshan, al centro del polpaccio sotto i ventri del gastrocnemio, e a BL58 Feiyang.
+- L5 (protocollo SM A) è nella zona di GV3 Yaoyangguan (sotto L4) e dei punti paravertebrali BL25-BL26.
+- Il tibiale anteriore (protocollo SM B) contiene ST36 Zusanli.
+- Il medio gluteo (protocollo SM B) è nell’area di GB30 Huantiao (più posteriore e profondo) e dei trigger point del medio gluteo.
+Queste sovrapposizioni sono un razionale interessante ma non una prova: nessuno studio ha confrontato Equistasi su agopunti e su altri punti.`,
+  },
+  {
+    id: 'agopuntura-punti',
+    cat: 'medicina',
+    title: 'Principali agopunti: dove si trovano e per cosa si usano',
+    source: 'WHO Standard Acupuncture Point Locations in the Western Pacific Region (2008); testi di agopuntura clinica. Indicazioni tradizionali, non validate per Equistasi',
+    tags: ['agopuntura', 'agopunti', 'cun', 'li4', 'hegu', 'st36', 'zusanli', 'gb34', 'sp6', 'pc6', 'gb20', 'gb21', 'bl40', 'kd1', 'lr3', 'bl23', 'gravidanza'],
+    text: `Misura: 1 cun = larghezza del pollice della persona all’articolazione; 3 cun = quattro dita affiancate (indice-mignolo) all’altezza della nocca media.
+- GV14 Dazhui: sotto il processo spinoso di C7. Usi tradizionali: collo, rigidità, "punto di incontro" dei meridiani yang.
+- GB20 Fengchi: sotto l’osso occipitale, nella fossetta tra sternocleidomastoideo e trapezio. Cefalea, cervicalgia, vertigini. Coincide con i trigger point dei muscoli sottoccipitali.
+- GB21 Jianjing: sulla sommità della spalla, a metà tra C7 e acromion (trapezio superiore). Tensione di collo e spalle. Da evitare in gravidanza.
+- LI4 Hegu: dorso della mano, tra 1° e 2° metacarpo, al centro del 2° metacarpo sul lato del pollice. Dolore di testa e viso. Da evitare in gravidanza.
+- PC6 Neiguan: 2 cun sopra la piega del polso, tra i tendini del palmare lungo e del flessore radiale del carpo. Nausea, ansia.
+- BL23 Shenshu: 1,5 cun a lato del processo spinoso di L2. Lombalgia.
+- BL40 Weizhong: al centro della piega del ginocchio (cavo popliteo). Lombalgia, dolore alla gamba.
+- BL57 Chengshan: al centro del polpaccio, dove si separano i due ventri del gastrocnemio. Crampi, dolore al polpaccio, lombalgia.
+- GB34 Yanglingquan: nella fossetta davanti e sotto la testa del perone. Tradizionalmente "punto dei tendini e dei muscoli": rigidità, crampi, dolore laterale della gamba.
+- ST36 Zusanli: 3 cun sotto il bordo inferiore della rotula, un dito a lato della cresta tibiale (sul tibiale anteriore). Stanchezza, ginocchio, digestione.
+- SP6 Sanyinjiao: 3 cun sopra il malleolo interno, dietro il bordo della tibia. Da evitare in gravidanza.
+- BL60 Kunlun: tra malleolo esterno e tendine d’Achille. Da evitare in gravidanza.
+- LR3 Taichong: dorso del piede, nella fossetta tra 1° e 2° metatarso. Cefalea, tensione.
+- KI1 Yongquan: pianta del piede, nella depressione del terzo anteriore. Radicamento ed equilibrio nella tradizione.
+Cautele: in gravidanza evitare la stimolazione di LI4, SP6, GB21, BL60 e dei punti lombosacrali, salvo indicazione del medico; non stimolare su pelle lesa, varici, cicatrici recenti.`,
+  },
+
+  /* ───────────────────────── Applicazioni esplorative ───────────────────────── */
+  {
+    id: 'espl-principi',
+    cat: 'esplorativo',
+    title: 'Applicazioni esplorative: regole per sperimentare in sicurezza',
+    source: 'Razionale fisioterapico generale; non fa parte dei protocolli ufficiali Equistasi',
+    tags: ['esplorativo', 'alternativo', 'sperimentare', 'personalizzare', 'nessun beneficio', 'non funziona', 'altri punti', 'fisioterapista'],
+    text: `Oltre ai protocolli ufficiali, il fisioterapista può esplorare punti di applicazione diversi seguendo razionali neurofisiologici. Queste applicazioni NON sono validate da studi su Equistasi: sono ipotesi da verificare sulla singola persona, da decidere con il fisioterapista.
+Regole:
+1. Partire sempre dal protocollo ufficiale; esplorare solo se non dà beneficio o se il problema è diverso.
+2. Definire un obiettivo misurabile e un test semplice: dolore 0–10, Timed Up and Go, Romberg, stare su un piede, distanza dita-pavimento, ampiezza di movimento, lunghezza del passo (meglio con video).
+3. Misurare prima, poi applicare e rimisurare dopo 10–20 minuti (dolore) o dopo la prima ora (equilibrio e cammino).
+4. Cambiare una cosa alla volta (un punto, poi l’altro), annotando ogni prova.
+5. Rispettare tempi e pause dei protocolli (massimo 5 giorni a settimana, togliere al primo fastidio) e le avvertenze del foglietto illustrativo.
+6. Se in 1–2 settimane non c’è un beneficio misurabile, tornare al protocollo standard o sospendere.
+Razionali principali (schede dedicate): ventre muscolare e giunzione miotendinea; trigger point e agopunti; metamero e dermatomero; catene miofasciali; antagonista nella spasticità; recettori di caviglia e piede per l’equilibrio; muscoli profondi del tronco; abbinamento con l’esercizio.`,
+  },
+  {
+    id: 'espl-recettori-muscolo',
+    cat: 'esplorativo',
+    title: 'Esplorativo: ventre muscolare, giunzione miotendinea, punto motore',
+    source: 'Fisiologia dei propriocettori (fusi neuromuscolari, organi tendinei del Golgi); letteratura sulla vibrazione muscolare focale. Ipotesi non validate per Equistasi',
+    tags: ['esplorativo', 'fusi neuromuscolari', 'golgi', 'tendine', 'ventre muscolare', 'punto motore', 'tono muscolare'],
+    text: `I fusi neuromuscolari (sensibili all’allungamento e molto sensibili alla vibrazione) sono più densi nel ventre dei muscoli, soprattutto in quelli posturali e nei muscoli piccoli di precisione (sottoccipitali, muscoli della mano, multifidi). Gli organi tendinei del Golgi si trovano alla giunzione muscolo-tendinea e segnalano la tensione; la loro attivazione tende a ridurre il tono del muscolo.
+Ipotesi di applicazione:
+- Per "attivare" e migliorare il controllo di un muscolo debole o poco percepito: sul ventre muscolare, vicino al punto motore (dove il nervo entra nel muscolo, di solito nel terzo prossimale-medio del ventre).
+- Per un muscolo teso o contratto: vicino alla giunzione muscolo-tendinea o sul trigger point del muscolo.
+- La letteratura sulla vibrazione focale applica di solito lo stimolo sul ventre muscolare o sul tendine del muscolo bersaglio.
+Valutare con forza percepita, ampiezza di movimento, dolore alla pressione e test funzionali prima e dopo.`,
+  },
+  {
+    id: 'espl-spasticita-antagonista',
+    cat: 'esplorativo',
+    title: 'Esplorativo: spasticità e applicazione sul muscolo antagonista',
+    source: 'Moggio L et al. Vibration therapy role in neurological diseases rehabilitation: an umbrella review of systematic reviews. Disabil Rehabil. 2021; Alashram AR et al. NeuroRehabilitation. 2019 (vibrazione focale nella spasticità dell’arto superiore dopo ictus); Fattorini L et al. Front Neurol. 2025 (mini-review sulla vibrazione focale nella spasticità)',
+    tags: ['esplorativo', 'spasticità', 'antagonista', 'inibizione reciproca', 'ictus', 'sclerosi multipla', 'piede equino', 'tibiale anteriore'],
+    text: `Principio dell’inibizione reciproca: attivando i propriocettori di un muscolo si favorisce il rilasciamento del suo antagonista. Nella letteratura sulla vibrazione focale (con dispositivi diversi da Equistasi) una revisione di revisioni (Moggio 2021) indica che, dopo ictus, la vibrazione sembra più utile se applicata sui muscoli antagonisti non spastici, mentre i risultati nella sclerosi multipla e nella paralisi cerebrale sono meno chiari; revisioni sull’arto superiore dopo ictus riportano riduzione della spasticità soprattutto a breve termine, con protocolli e dosaggi ancora non definiti.
+Esempi esplorativi (da decidere col fisioterapista):
+- Spasticità dei flessori plantari (piede equino): dispositivo sul tibiale anteriore (antagonista). Il protocollo SM B prevede già tibiale anteriore o polpaccio a scelta del fisioterapista.
+- Spasticità dei flessori di gomito e polso: sui muscoli estensori dell’avambraccio o sul tricipite.
+- Spasticità degli adduttori d’anca: sul medio gluteo (già nel protocollo SM B).
+Sempre associare allungamenti ed esercizio attivo del muscolo antagonista mentre il dispositivo è applicato. Valutare con la scala di Ashworth modificata, ampiezza di movimento e cammino.`,
+  },
+  {
+    id: 'espl-catene',
+    cat: 'esplorativo',
+    title: 'Esplorativo: catene muscolari e miofasciali',
+    source: 'Myers TW. Anatomy Trains (catene miofasciali); Wilke J et al. Arch Phys Med Rehabil. 2016 (evidenze anatomiche di continuità miofasciale). Ipotesi non validate per Equistasi',
+    tags: ['esplorativo', 'catene miofasciali', 'catena posteriore', 'anatomy trains', 'fascia', 'postura', 'lombalgia', 'cervicale'],
+    text: `I muscoli lavorano in catene collegate dalla fascia. La più studiata è la linea superficiale posteriore: fascia plantare → polpacci (tricipite surale) → ischiocrurali → muscoli erettori della colonna → fascia del cranio; studi su cadavere confermano la continuità tra polpaccio, ischiocrurali e fascia lombare. Il protocollo classico Equistasi (C7 + polpacci) stimola proprio due estremità di questa catena posturale antigravitaria.
+Ipotesi esplorative:
+- Lombalgia o rigidità posteriore (dita-pavimento ridotto): ischiocrurali o paravertebrali lombari, insieme o in alternativa ai polpacci.
+- Postura flessa in avanti (es. Parkinson): lungo la catena posteriore (polpacci, glutei, paravertebrali dorsali) abbinando esercizi in estensione.
+- Dolore laterale di anca o ginocchio: lungo la linea laterale (peronei, bandelletta ileotibiale/tensore della fascia lata, medio gluteo).
+- Collo e spalle: trapezio superiore, elevatore della scapola, sottoccipitali (zona di GB20/GB21).
+Verifica con test di flessibilità (dita-pavimento), postura in foto, dolore e cammino.`,
+  },
+  {
+    id: 'espl-equilibrio-piede',
+    cat: 'esplorativo',
+    title: 'Esplorativo: caviglia, piede e cervicale per l’equilibrio',
+    source: 'Fisiologia del controllo posturale (strategie di caviglia e anca, recettori plantari e cervicali); studi sulle solette con stimolazione plantare negli anziani e nelle malattie neurologiche. Ipotesi non validate per Equistasi',
+    tags: ['esplorativo', 'equilibrio', 'caviglia', 'piede', 'distorsione', 'instabilità di caviglia', 'peronei', 'pianta del piede', 'vertigine cervicale', 'sottoccipitali'],
+    text: `Il controllo dell’equilibrio in piedi usa soprattutto la "strategia di caviglia" (soleo, tibiale anteriore, peronei), le informazioni dei recettori della pianta del piede e quelle dei muscoli profondi del collo (molto ricchi di fusi neuromuscolari).
+Ipotesi esplorative:
+- Instabilità di caviglia o esiti di distorsione: sui peronei (lato esterno della gamba, terzo superiore-medio) durante esercizi propriocettivi; in alternativa sul tibiale anteriore.
+- Neuropatia o ridotta sensibilità plantare: vicino alla caviglia (tibiale anteriore, peronei) invece che sotto il piede, dove pressione, sudore e attrito rendono difficile mantenere il dispositivo; mai su ulcere o cute fragile (piede diabetico: chiedere al medico).
+- Instabilità con rigidità cervicale o "vertigine cervicogenica" (dopo aver escluso cause vestibolari e neurologiche con il medico): nella zona dei muscoli sottoccipitali/GB20 o su C7.
+- Controllo del tronco: paravertebrali lombari (multifido, a 2 cm dalla linea mediana a L4-L5) o L5.
+Valutare con Romberg, stazione su un piede, tandem, TUG.`,
+  },
+  {
+    id: 'espl-distretti',
+    cat: 'esplorativo',
+    title: 'Esplorativo: idee per distretto (ginocchio, spalla, mano, lombare)',
+    source: 'Razionale fisioterapico; protocollo Dolore e dermatomeri Equistasi; mappe dei trigger point (Travell & Simons). Ipotesi non validate per Equistasi',
+    tags: ['esplorativo', 'ginocchio', 'artrosi', 'protesi', 'crociato', 'spalla', 'mano', 'artrosi mano', 'lombare', 'sciatica', 'epicondilite', 'cervicale'],
+    text: `Schema di partenza per ogni distretto: 1 sul punto più doloroso o sul trigger point, 2 sui muscoli che stabilizzano l’articolazione, 1 sulla vertebra del metamero (protocollo Dolore). Varianti esplorative:
+- Ginocchio (artrosi, post-protesi o post-crociato): vasto mediale obliquo (sopra-dentro la rotula) per il controllo del quadricipite; in alternativa zona di ST36 o GB34; metamero L3-L4. Abbinare esercizi di quadricipite ed equilibrio.
+- Spalla: sovraspinato/infraspinato (trigger point della scapola), deltoide; metamero C5-C6; per la stabilità scapolare trapezio medio-inferiore.
+- Gomito (epicondilite): estensori dell’avambraccio 3–4 cm sotto l’epicondilo; metamero C6-C7.
+- Mano e polso (artrosi, rigidità): primo spazio interosseo dorsale (zona di LI4, evitare in gravidanza) o muscoli dell’eminenza tenar; metamero C6-C8.
+- Lombare e sciatalgia: paravertebrali al livello doloroso, piriforme/medio gluteo, polpaccio sul dermatomero coinvolto (L5 lato esterno della gamba, S1 polpaccio e bordo esterno del piede); vedere segnali d’allarme.
+- Cervicale e cefalea tensiva: trapezio superiore (GB21), sottoccipitali (GB20), C7.
+Ogni variante va misurata (dolore 0–10, movimento, funzione) e mantenuta solo se dà un beneficio.`,
+  },
+  {
+    id: 'espl-esercizio',
+    cat: 'esplorativo',
+    title: 'Esplorativo: abbinare Equistasi all’esercizio e al compito',
+    source: 'Principi di apprendimento motorio e integrazione sensori-motoria; negli studi Equistasi il dispositivo è stato spesso associato a un programma di esercizi (Volpe 2014, Serio 2019, Spolaor 2023)',
+    tags: ['esplorativo', 'esercizio', 'allenamento', 'compito', 'riabilitazione', 'apprendimento motorio', 'bilaterale', 'controlaterale'],
+    text: `L’apprendimento motorio è più efficace quando lo stimolo sensoriale arriva mentre si esegue il compito da migliorare. Per questo ha senso indossare il dispositivo durante gli esercizi specifici: equilibrio e cammino nel Parkinson e nella SM (come negli studi Volpe 2014 e Serio 2019), propriocezione e cambi di direzione nello sport (Spolaor 2023).
+Varianti esplorative:
+- Dispositivo sul muscolo protagonista dell’esercizio (es. medio gluteo durante esercizi in appoggio monopodalico).
+- Problemi di un solo lato (es. emiparesi, esiti di distorsione): applicazione bilaterale o solo dal lato colpito, confrontando le due soluzioni con lo stesso test; esiste anche l’ipotesi di stimolare il lato sano per sfruttare l’educazione crociata, non verificata con Equistasi.
+- Programmare le applicazioni nelle ore di esercizio e, nel Parkinson, nella fase "on" del farmaco.`,
+  },
+
   /* ───────────────────────── Sicurezza ───────────────────────── */
   {
     id: 'sic-urgenze',
@@ -568,6 +724,7 @@ export const CATEGORIES = {
   studio: 'Studio scientifico',
   riabilitazione: 'Riabilitazione',
   medicina: 'Medicina',
+  esplorativo: 'Applicazione esplorativa',
   valutazione: 'Valutazione',
   sicurezza: 'Sicurezza',
 };

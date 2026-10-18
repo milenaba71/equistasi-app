@@ -190,3 +190,5 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .pa-poster, .pa-think i { animation: none; }
 }
+.src-esplorativo { background: #fff4dc; border-color: #e8b84a; }
+@media (prefers-color-scheme: dark) { .src-esplorativo { background: #3a2f14; border-color: #a9822c; } }

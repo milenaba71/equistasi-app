@@ -23,7 +23,7 @@ from pypdf import PdfReader
 
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / 'assistente' / 'knowledge' / 'extra.mjs'
-CATS = {'dispositivo', 'protocollo', 'studio', 'riabilitazione', 'medicina', 'valutazione', 'sicurezza'}
+CATS = {'dispositivo', 'protocollo', 'studio', 'riabilitazione', 'medicina', 'esplorativo', 'valutazione', 'sicurezza'}
 CHUNK = 2500
 
 
