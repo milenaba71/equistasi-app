@@ -1,0 +1,14 @@
+name = "equistasi-assistente"
+main = "src/index.js"
+compatibility_date = "2026-09-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+# Origini autorizzate a chiamare il Worker (separate da virgola). Esempio:
+# "https://milenaba71.github.io,https://app.equistasi.com"
+ALLOWED_ORIGINS = "https://milenaba71.github.io,https://app.equistasi.com,http://localhost:8000"
+# MODEL = "claude-opus-5-5"
+# EFFORT = "low"
+
+# La chiave API NON va qui: impostala come secret con
+#   npx wrangler secret put ANTHROPIC_API_KEY

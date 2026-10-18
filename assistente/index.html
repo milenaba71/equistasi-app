@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="it">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+  <title>Stasi – Assistente Equistasi</title>
+  <meta name="description" content="Parla con Stasi, l’assistente virtuale Equistasi: dispositivo, protocolli, studi scientifici e riabilitazione." />
+  <meta name="theme-color" content="#29235C" />
+  <link rel="icon" href="../equistasi-logo.png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;600;700;800&display=swap" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+  <header class="top">
+    <img src="../equistasi-logo.png" alt="Equistasi" class="logo" />
+    <span class="top-title">Assistente</span>
+    <span class="mode" id="mode" title="Modalità di risposta"></span>
+    <button class="icon-btn" id="btn-voice" type="button" aria-pressed="true" aria-label="Voce dell’avatar attiva" title="Voce on/off">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"/><path class="wave" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><path class="mute" d="M16 9l6 6M22 9l-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <button class="icon-btn" id="btn-new" type="button" aria-label="Nuova conversazione" title="Nuova conversazione">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 12a8 8 0 1 0 2.4-5.7M4 4v4.5h4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+    </button>
+  </header>
+
+  <main class="stage">
+    <section class="avatar-wrap" aria-label="Avatar">
+      <div class="halo" id="halo"></div>
+      <div id="avatar" class="avatar" data-state="idle"></div>
+      <p class="status" id="status" aria-live="polite">Ciao! Sono Stasi.</p>
+    </section>
+
+    <section class="chat" aria-label="Conversazione">
+      <ol class="log" id="log" aria-live="polite"></ol>
+      <div class="chips" id="chips"></div>
+    </section>
+  </main>
+
+  <form class="composer" id="composer" autocomplete="off">
+    <button class="mic" id="btn-mic" type="button" aria-label="Parla" title="Tieni premuto o tocca per parlare">
+      <svg viewBox="0 0 24 24" width="26" height="26" aria-hidden="true"><rect x="9" y="3" width="6" height="11" rx="3" fill="currentColor"/><path d="M6 11a6 6 0 0 0 12 0M12 17v4M9 21h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    </button>
+    <textarea id="input" rows="1" placeholder="Scrivi o tocca il microfono…" aria-label="Messaggio"></textarea>
+    <button class="send" id="btn-send" type="submit" aria-label="Invia">
+      <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true"><path d="M4 12l16-8-6 16-2.5-6.5z" fill="currentColor"/></svg>
+    </button>
+  </form>
+  <p class="disclaimer">Stasi dà informazioni generali e non sostituisce medico o fisioterapista. In caso di emergenza chiama il <b>112</b>.</p>
+
+  <dialog id="source-dlg" class="source-dlg">
+    <form method="dialog">
+      <p class="src-cat" id="src-cat"></p>
+      <h2 id="src-title"></h2>
+      <p class="src-ref" id="src-ref"></p>
+      <div class="src-text" id="src-text"></div>
+      <p><a id="src-link" target="_blank" rel="noopener">Apri la pubblicazione</a></p>
+      <button class="btn" value="close">Chiudi</button>
+    </form>
+  </dialog>
+
+  <script src="js/config.js"></script>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
